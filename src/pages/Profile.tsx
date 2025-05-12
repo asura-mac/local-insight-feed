@@ -120,81 +120,96 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Profile Settings</h1>
-      </div>
+      <div className="max-w-3xl mx-auto px-4">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Profile Settings</h1>
+        </div>
 
-      {loading ? (
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-2">
-              <div className="w-full h-8 bg-gray-200 animate-pulse rounded"></div>
-              <div className="w-2/3 h-8 bg-gray-200 animate-pulse rounded"></div>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Information</CardTitle>
-                <CardDescription>Your basic account details</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
-                  <Input value={user?.email || ''} disabled />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-                <CardDescription>Update your contact details</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Phone Number</label>
-                  <Input 
-                    value={phoneNumber} 
-                    onChange={(e) => setPhoneNumber(e.target.value)} 
-                    placeholder="Enter your phone number" 
-                  />
-                </div>
-                <Button onClick={handlePhoneUpdate}>Update Phone</Button>
-              </CardContent>
-            </Card>
-
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>Location</CardTitle>
-                <CardDescription>Your current location for alerts</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {showLocationUpdate ? (
-                  <ManualLocationEntry 
-                    onLocationSelected={handleLocationUpdate}
-                    initialCountry={userData?.country || "India"}
-                    initialState={userData?.state || ""}
-                    initialDistrict={userData?.district || ""}
-                  />
-                ) : (
-                  <div className="space-y-4">
-                    <p className="text-gray-600">
-                      <strong>Current Location:</strong> {userData?.location || "No location set"}
-                    </p>
-                    <Button onClick={() => setShowLocationUpdate(true)}>
-                      Update Location
-                    </Button>
+        {loading ? (
+          <Card className="border-gray-800 bg-[#222]">
+            <CardContent className="p-6">
+              <div className="space-y-2">
+                <div className="w-full h-8 bg-gray-700 animate-pulse rounded"></div>
+                <div className="w-2/3 h-8 bg-gray-700 animate-pulse rounded"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card className="border-gray-800 bg-[#222]">
+                <CardHeader>
+                  <CardTitle className="text-white">Account Information</CardTitle>
+                  <CardDescription className="text-gray-400">Your basic account details</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300">Email</label>
+                    <Input 
+                      value={user?.email || ''} 
+                      disabled 
+                      className="bg-[#333] text-white border-gray-700"
+                    />
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </>
-      )}
+                </CardContent>
+              </Card>
+
+              <Card className="border-gray-800 bg-[#222]">
+                <CardHeader>
+                  <CardTitle className="text-white">Contact Information</CardTitle>
+                  <CardDescription className="text-gray-400">Update your contact details</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300">Phone Number</label>
+                    <Input 
+                      value={phoneNumber} 
+                      onChange={(e) => setPhoneNumber(e.target.value)} 
+                      placeholder="Enter your phone number"
+                      className="bg-[#333] text-white border-gray-700" 
+                    />
+                  </div>
+                  <Button 
+                    onClick={handlePhoneUpdate}
+                    className="bg-[#D32F2F] hover:bg-[#B71C1C] text-white"
+                  >
+                    Update Phone
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="md:col-span-2 border-gray-800 bg-[#222]">
+                <CardHeader>
+                  <CardTitle className="text-white">Location</CardTitle>
+                  <CardDescription className="text-gray-400">Your current location for alerts</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {showLocationUpdate ? (
+                    <ManualLocationEntry 
+                      onLocationSelected={handleLocationUpdate}
+                      initialCountry={userData?.country || "India"}
+                      initialState={userData?.state || ""}
+                      initialDistrict={userData?.district || ""}
+                    />
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-gray-300">
+                        <strong>Current Location:</strong> {userData?.location || "No location set"}
+                      </p>
+                      <Button 
+                        onClick={() => setShowLocationUpdate(true)}
+                        className="bg-[#D32F2F] hover:bg-[#B71C1C] text-white"
+                      >
+                        Update Location
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
+      </div>
     </AppLayout>
   );
 }

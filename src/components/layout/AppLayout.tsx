@@ -9,7 +9,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-[#1A1A1A] text-white">
       <Header />
       <div className="flex-1 flex">
         <Sidebar />
@@ -17,6 +17,11 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
+      <footer className="py-4 px-6 border-t border-gray-800 text-center text-gray-400 text-sm">
+        <div className="container mx-auto">
+          <p>Powered by AlertHub | Location data via Nominatim OpenStreetMap</p>
+        </div>
+      </footer>
     </div>
   );
 }

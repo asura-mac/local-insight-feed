@@ -39,12 +39,21 @@ export function ManualLocationEntry({
   const [state, setState] = useState(initialState || "");
   const [district, setDistrict] = useState(initialDistrict || "");
   const [districts, setDistricts] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Update districts when state changes
   useEffect(() => {
     if (state) {
-      setDistricts(getDistrictsForState(state));
-      setDistrict(""); // Reset district when state changes
+      setIsLoading(true);
+      setDistricts([]);
+      
+      // Small delay to show loading state
+      setTimeout(() => {
+        const districtList = getDistrictsForState(state);
+        setDistricts(districtList);
+        setDistrict(""); // Reset district when state changes
+        setIsLoading(false);
+      }, 300);
     } else {
       setDistricts([]);
     }
@@ -67,37 +76,37 @@ export function ManualLocationEntry({
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto animate-slide-up">
+    <Card className="w-full max-w-md mx-auto animate-slide-up border-gray-800 bg-[#222]">
       <CardHeader>
-        <CardTitle className="text-2xl text-center">Enter Your Location</CardTitle>
-        <CardDescription className="text-center">
+        <CardTitle className="text-2xl text-white text-center">Enter Your Location</CardTitle>
+        <CardDescription className="text-center text-gray-300">
           Please select your location to receive relevant alerts
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Country</label>
+          <label className="text-sm font-medium text-gray-300">Country</label>
           <Select disabled value={country}>
-            <SelectTrigger>
+            <SelectTrigger className="bg-[#333] text-white border-gray-700">
               <SelectValue placeholder="Select Country" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-[#333] text-white border-gray-700">
               <SelectItem value="India">India</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground">Currently only supporting India</p>
+          <p className="text-xs text-gray-400">Currently only supporting India</p>
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">State</label>
+          <label className="text-sm font-medium text-gray-300">State</label>
           <Select 
             value={state} 
             onValueChange={setState}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-[#333] text-white border-gray-700">
               <SelectValue placeholder="Select State" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-[#333] text-white border-gray-700">
               {getIndianStates().map((stateName) => (
                 <SelectItem key={stateName} value={stateName}>
                   {stateName}
@@ -107,17 +116,28 @@ export function ManualLocationEntry({
           </Select>
         </div>
 
-        {state && districts.length > 0 && (
+        {state && (
           <div className="space-y-2">
-            <label className="text-sm font-medium">District</label>
+            <label className="text-sm font-medium text-gray-300">District</label>
             <Select 
               value={district} 
               onValueChange={setDistrict}
+              disabled={isLoading}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select District" />
+              <SelectTrigger className="bg-[#333] text-white border-gray-700">
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Loading...
+                  </div>
+                ) : (
+                  <SelectValue placeholder="Select District" />
+                )}
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[#333] text-white border-gray-700">
                 {districts.map((districtName) => (
                   <SelectItem key={districtName} value={districtName}>
                     {districtName}
@@ -125,13 +145,16 @@ export function ManualLocationEntry({
                 ))}
               </SelectContent>
             </Select>
+            {districts.length === 0 && !isLoading && (
+              <p className="text-xs text-gray-400">No districts available for this state</p>
+            )}
           </div>
         )}
       </CardContent>
       <CardFooter>
         <Button 
           onClick={handleSubmit} 
-          className="w-full"
+          className="w-full bg-[#D32F2F] hover:bg-[#B71C1C] text-white"
           disabled={!state}
         >
           Continue
