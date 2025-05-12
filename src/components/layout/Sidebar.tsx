@@ -1,0 +1,108 @@
+
+import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+
+export function Sidebar() {
+  const location = useLocation();
+  
+  const links = [
+    { name: "Dashboard", href: "/", icon: "home" },
+    { name: "My Alerts", href: "/alerts", icon: "alert" },
+    { name: "Profile", href: "/profile", icon: "user" },
+  ];
+
+  return (
+    <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 pt-16">
+      <div className="flex-1 flex flex-col min-h-0 border-r bg-white">
+        <nav className="px-2 pt-6 space-y-1">
+          {links.map((link) => {
+            const isActive = link.href === '/' 
+              ? location.pathname === link.href
+              : location.pathname.startsWith(link.href);
+            
+            return (
+              <Link
+                key={link.name}
+                to={link.href}
+                className={cn(
+                  "group flex items-center px-4 py-3 text-sm font-medium rounded-md",
+                  isActive
+                    ? "bg-primary text-white"
+                    : "text-gray-600 hover:bg-gray-50"
+                )}
+              >
+                <span className="mr-3">{renderIcon(link.icon, isActive)}</span>
+                {link.name}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
+  );
+}
+
+function renderIcon(icon: string, isActive: boolean) {
+  const className = isActive ? "text-white" : "text-gray-400";
+  
+  switch (icon) {
+    case "home":
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+      );
+    case "alert":
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+      );
+    case "user":
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
