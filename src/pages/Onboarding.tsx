@@ -2,20 +2,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthProvider";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { LocationDetection } from "@/components/onboarding/LocationDetection";
 import { ManualLocationEntry } from "@/components/onboarding/ManualLocationEntry";
+import { Header } from "@/components/layout/Header";
 
 export default function Onboarding() {
   const [step, setStep] = useState<"detect" | "manual">("detect");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
 
   if (!user) {
-    navigate('/login');
+    // If no user, redirect will happen through ProtectedRoute
     return null;
   }
 
@@ -28,60 +28,58 @@ export default function Onboarding() {
       // Create location string
       const locationString = [district, state, country].filter(Boolean).join(", ");
       
+      console.log("Saving user location:", { locationString, country, state, district });
+      
       // Save user data in the database
       const { error } = await supabase
         .from('users')
-        .upsert({
-          id: user.id,
-          email: user.email || '',
+        .update({
           location: locationString,
           country,
           state,
           district,
-          created_at: new Date().toISOString(),
-        });
+        })
+        .eq('id', user.id);
       
       if (error) throw error;
       
-      toast({
-        title: "Onboarding complete",
-        description: "Your location has been saved successfully",
-      });
+      toast.success("Location saved successfully!");
       
       // Navigate to alerts page
       navigate('/alerts');
     } catch (error: any) {
       console.error("Error saving user data:", error);
       
-      toast({
-        title: "Error saving your data",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to save your location. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-primary">Welcome to Alert Hub</h1>
-          <p className="mt-2 text-gray-600">Let's set up your location preferences</p>
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <Header />
+      
+      <main className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold text-primary">Welcome to Alert Hub</h1>
+            <p className="mt-2 text-gray-600">Let's set up your location preferences</p>
+          </div>
+          
+          {step === "detect" ? (
+            <LocationDetection
+              onLocationDetected={handleLocationSelected}
+              onSkip={() => setStep("manual")}
+            />
+          ) : (
+            <ManualLocationEntry
+              onLocationSelected={handleLocationSelected}
+              initialCountry="India"
+            />
+          )}
         </div>
-        
-        {step === "detect" ? (
-          <LocationDetection
-            onLocationDetected={handleLocationSelected}
-            onSkip={() => setStep("manual")}
-          />
-        ) : (
-          <ManualLocationEntry
-            onLocationSelected={handleLocationSelected}
-          />
-        )}
-      </div>
+      </main>
     </div>
   );
 }

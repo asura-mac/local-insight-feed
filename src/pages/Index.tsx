@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Header } from "@/components/layout/Header"; 
 
 export default function Index() {
   const { user, loading } = useAuth();
@@ -17,7 +18,7 @@ export default function Index() {
   }, [user, loading, navigate]);
 
   // If still loading or user is authenticated, show minimal content
-  if (loading || user) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-16 h-16 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
@@ -25,39 +26,13 @@ export default function Index() {
     );
   }
 
+  if (user) {
+    return null; // Navigate effect will handle redirect
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <header className="bg-white py-4 shadow-sm">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-primary"
-            >
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            <span className="font-bold text-lg">Alert Hub</span>
-          </div>
-          <div className="flex space-x-4">
-            <Button variant="ghost" asChild>
-              <Link to="/login">Sign In</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/register">Sign Up</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header />
       
       <main>
         <section className="py-20 container mx-auto px-4">

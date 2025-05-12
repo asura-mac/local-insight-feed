@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 
 export function RegisterForm() {
   const [email, setEmail] = useState("");
@@ -26,6 +27,9 @@ export function RegisterForm() {
     setLoading(true);
     try {
       await signUp(email, password);
+      toast.success("Account created successfully!");
+    } catch (error: any) {
+      // Error is already handled in the signUp function
     } finally {
       setLoading(false);
     }
@@ -35,6 +39,8 @@ export function RegisterForm() {
     setLoading(true);
     try {
       await signInWithGoogle();
+    } catch (error) {
+      // Error is already handled in the signInWithGoogle function
     } finally {
       setLoading(false);
     }

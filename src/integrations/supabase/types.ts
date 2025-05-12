@@ -9,7 +9,96 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      alerts: {
+        Row: {
+          country: string | null
+          description: string
+          district: string | null
+          id: string
+          source: string | null
+          state: string | null
+          timestamp: string | null
+          title: string
+        }
+        Insert: {
+          country?: string | null
+          description: string
+          district?: string | null
+          id?: string
+          source?: string | null
+          state?: string | null
+          timestamp?: string | null
+          title: string
+        }
+        Update: {
+          country?: string | null
+          description?: string
+          district?: string | null
+          id?: string
+          source?: string | null
+          state?: string | null
+          timestamp?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      locations: {
+        Row: {
+          country: string
+          district: string
+          id: number
+          is_union_territory: boolean | null
+          state: string
+        }
+        Insert: {
+          country: string
+          district: string
+          id?: number
+          is_union_territory?: boolean | null
+          state: string
+        }
+        Update: {
+          country?: string
+          district?: string
+          id?: number
+          is_union_territory?: boolean | null
+          state?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          country: string | null
+          created_at: string | null
+          district: string | null
+          email: string
+          id: string
+          location: string | null
+          phone_number: string | null
+          state: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string | null
+          district?: string | null
+          email: string
+          id: string
+          location?: string | null
+          phone_number?: string | null
+          state?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string | null
+          district?: string | null
+          email?: string
+          id?: string
+          location?: string | null
+          phone_number?: string | null
+          state?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

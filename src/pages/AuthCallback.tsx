@@ -1,26 +1,71 @@
-
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     const handleAuthCallback = async () => {
-      const { error } = await supabase.auth.getSession();
-      
-      // Redirect regardless of result - if there's a session, protected routes will work
-      // If not, the user will be redirected to login
-      navigate('/');
+      try {
+        // Get session from URL
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data?.session) {
+          // Check if user exists in our users table
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', data.session.user.id)
+            .maybeSingle();
+          
+          if (userError) {
+            throw userError;
+          }
+          
+          // If no user data or no location set, redirect to onboarding
+          if (!userData || !userData.location) {
+            navigate('/onboarding');
+          } else {
+            // Otherwise, redirect to alerts
+            navigate('/alerts');
+          }
+        } else {
+          // No session, redirect to login
+          navigate('/login');
+        }
+      } catch (error: any) {
+        console.error('Auth callback error:', error);
+        setError(error.message || 'Authentication failed');
+        // On error, go to login
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
+      }
     };
     
     handleAuthCallback();
   }, [navigate]);
   
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-16 h-16 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
+    <div className="min-h-screen flex flex-col items-center justify-center">
+      {error ? (
+        <div className="text-center">
+          <h2 className="text-xl text-red-500">Authentication Error</h2>
+          <p className="mt-2">{error}</p>
+          <p className="mt-4">Redirecting to login page...</p>
+        </div>
+      ) : (
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-500">Completing authentication...</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -25,23 +25,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Set up auth state listener first
     const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
+      
       if (event === 'SIGNED_IN' && session) {
         setUser(session.user);
         
         // Defer data fetching to prevent potential deadlocks
         setTimeout(async () => {
-          // Check if user exists in our users table
-          const { data: userData } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+          try {
+            // Check if user exists in our users table
+            const { data: userData, error: userError } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', session.user.id)
+              .maybeSingle();
+              
+            if (userError) throw userError;
             
-          // If user doesn't exist in our database or has no location, redirect to onboarding
-          if (!userData || !userData.location) {
-            navigate('/onboarding');
-          } else {
-            navigate('/alerts');
+            // If user doesn't exist in our database or has no location, redirect to onboarding
+            if (!userData || !userData.location) {
+              navigate('/onboarding');
+            } else {
+              navigate('/alerts');
+            }
+          } catch (error) {
+            console.error("Error checking user data:", error);
           }
         }, 0);
       } else if (event === 'SIGNED_OUT') {
@@ -52,18 +60,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Then check for active session
     const getSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Error fetching session:', error);
-        return;
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error fetching session:', error);
+          return;
+        }
+        
+        if (data?.session) {
+          setUser(data.session.user);
+        }
+      } finally {
+        setLoading(false);
       }
-      
-      if (data?.session) {
-        setUser(data.session.user);
-      }
-      
-      setLoading(false);
     };
     
     getSession();
@@ -85,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Continue even if this fails
       }
       
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
         toast({
@@ -95,7 +105,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         return Promise.reject(error);
       }
-    } catch (error) {
+
+      return Promise.resolve();
+    } catch (error: any) {
       console.error('Sign in error:', error);
       toast({
         title: "Error",
@@ -111,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Clean up existing auth state
       cleanupAuthState();
       
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password });
       
       if (error) {
         toast({
@@ -121,7 +133,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         return Promise.reject(error);
       }
-    } catch (error) {
+
+      if (data.user) {
+        toast({
+          title: "Sign up successful",
+          description: "Your account has been created successfully.",
+        });
+      }
+
+      return Promise.resolve();
+    } catch (error: any) {
       console.error('Sign up error:', error);
       toast({
         title: "Error",
@@ -152,7 +173,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         return Promise.reject(error);
       }
-    } catch (error) {
+
+      return Promise.resolve();
+    } catch (error: any) {
       console.error('Google sign in error:', error);
       toast({
         title: "Error",
@@ -174,7 +197,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Force page reload for a clean state
       window.location.href = '/login';
-    } catch (error) {
+      
+      return Promise.resolve();
+    } catch (error: any) {
       console.error('Sign out error:', error);
       toast({
         title: "Error",

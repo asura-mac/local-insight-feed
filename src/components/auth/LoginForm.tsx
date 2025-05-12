@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -18,6 +19,10 @@ export function LoginForm() {
     
     try {
       await signIn(email, password);
+      toast.success("Logged in successfully");
+    } catch (error) {
+      console.error("Login error:", error);
+      // Error is already handled in the signIn function
     } finally {
       setLoading(false);
     }
@@ -27,6 +32,9 @@ export function LoginForm() {
     setLoading(true);
     try {
       await signInWithGoogle();
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      // Error is already handled in the signInWithGoogle function
     } finally {
       setLoading(false);
     }

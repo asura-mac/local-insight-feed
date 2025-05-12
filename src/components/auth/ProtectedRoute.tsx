@@ -11,7 +11,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  // While checking authentication status, show nothing
+  // While checking authentication status, show loading indicator
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { 
   Card, 
   CardContent, 
@@ -26,7 +26,6 @@ export function LocationDetection({
   onSkip 
 }: LocationDetectionProps) {
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
   const detectLocation = async () => {
     setLoading(true);
@@ -34,6 +33,8 @@ export function LocationDetection({
     try {
       const position = await getCurrentPosition();
       const { latitude, longitude } = position.coords;
+      
+      console.log("Location coordinates:", { latitude, longitude });
       
       // Get location details using reverse geocoding
       const locationData = await reverseGeocode(latitude, longitude);
@@ -46,25 +47,22 @@ export function LocationDetection({
         throw new Error("Couldn't determine your country");
       }
       
-      toast({
-        title: "Location detected",
-        description: `${locationData.district || ''} ${locationData.state || ''}, ${locationData.country}`,
-      });
+      console.log("Detected location:", locationData);
+      
+      toast.success(
+        `Location detected: ${locationData.district || ''} ${locationData.state || ''}, ${locationData.country}`
+      );
       
       // Pass location data to parent component
       onLocationDetected(
-        locationData.country || '',
+        locationData.country || 'India',
         locationData.state || '',
         locationData.district || ''
       );
     } catch (error: any) {
       console.error("Location detection error:", error);
       
-      toast({
-        title: "Location detection failed",
-        description: error.message || "Please enter your location manually",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Please enter your location manually");
       
       // Move to manual entry
       onSkip();
