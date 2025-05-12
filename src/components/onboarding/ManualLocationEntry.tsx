@@ -16,7 +16,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { indianStates, getDistrictsForState } from "@/lib/locationUtils";
+import { getIndianStates, getDistrictsForState } from "@/lib/locationUtils";
 
 interface ManualLocationEntryProps {
   onLocationSelected: (
@@ -98,7 +98,7 @@ export function ManualLocationEntry({
               <SelectValue placeholder="Select State" />
             </SelectTrigger>
             <SelectContent>
-              {indianStates.map((stateName) => (
+              {getIndianStates().map((stateName) => (
                 <SelectItem key={stateName} value={stateName}>
                   {stateName}
                 </SelectItem>
