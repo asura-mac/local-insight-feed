@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, supabase } from './supabase';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { cleanupAuthState } from './authUtils';
 
 interface AuthContextType {
   user: User | null;
@@ -22,7 +23,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check active session
+    // Set up auth state listener first
+    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        setUser(session.user);
+        
+        // Defer data fetching to prevent potential deadlocks
+        setTimeout(async () => {
+          // Check if user exists in our users table
+          const { data: userData } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+            
+          // If user doesn't exist in our database or has no location, redirect to onboarding
+          if (!userData || !userData.location) {
+            navigate('/onboarding');
+          } else {
+            navigate('/alerts');
+          }
+        }, 0);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        navigate('/login');
+      }
+    });
+
+    // Then check for active session
     const getSession = async () => {
       const { data, error } = await supabase.auth.getSession();
       
@@ -40,30 +68,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     getSession();
 
-    // Set up auth listener
-    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        setUser(session.user);
-        
-        // Check if user exists in our users table
-        const { data: userData } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-          
-        // If user doesn't exist in our database or has no location, redirect to onboarding
-        if (!userData || !userData.location) {
-          navigate('/onboarding');
-        } else {
-          navigate('/alerts');
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        navigate('/login');
-      }
-    });
-
     return () => {
       data.subscription.unsubscribe();
     };
@@ -71,6 +75,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      // Clean up existing auth state
+      cleanupAuthState();
+      
+      // Try global sign out first
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+      
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
@@ -94,6 +108,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
+      // Clean up existing auth state
+      cleanupAuthState();
+      
       const { error } = await supabase.auth.signUp({ email, password });
       
       if (error) {
@@ -117,6 +134,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
+      // Clean up existing auth state
+      cleanupAuthState();
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -145,8 +165,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      // Clean up auth state first
+      cleanupAuthState();
+      
+      // Try global sign out
+      await supabase.auth.signOut({ scope: 'global' });
       setUser(null);
+      
+      // Force page reload for a clean state
+      window.location.href = '/login';
     } catch (error) {
       console.error('Sign out error:', error);
       toast({
