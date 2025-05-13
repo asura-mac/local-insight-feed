@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const CACHE_TIME = 60 * 5; // Cache for 5 minutes
@@ -57,17 +58,19 @@ async function fetchANITweets() {
   }
 }
 
-// Add CORS headers to all responses
+// CORS headers for all responses
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // or restrict to your frontend domain
+  "Access-Control-Allow-Origin": "*", // Ideally restrict to your frontend domain
   "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info",
+  "Access-Control-Max-Age": "86400", // 24 hours cache for preflight requests
 };
 
 serve(async (req) => {
+  // Handle preflight OPTIONS request properly
   if (req.method === "OPTIONS") {
-    // Preflight request
-    return new Response("ok", {
+    return new Response(null, {
+      status: 204, // No content for OPTIONS
       headers: corsHeaders,
     });
   }
