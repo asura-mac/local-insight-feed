@@ -2,6 +2,7 @@
 import { ReactNode } from "react";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
+import { Footer } from "./Footer";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -9,19 +10,15 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="min-h-screen flex flex-col bg-[#1A1A1A] text-white">
+    <div className="min-h-screen flex flex-col bg-[#1A1A1A]">
       <Header />
-      <div className="flex-1 flex">
+      <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-          <div className="max-w-7xl mx-auto">{children}</div>
+        <main className="flex-1 md:pl-64 pt-16 min-h-[calc(100vh-4rem)]">
+          <div className="container mx-auto px-4 py-6 flex-1">{children}</div>
+          <Footer />
         </main>
       </div>
-      <footer className="py-4 px-6 border-t border-gray-800 text-center text-gray-400 text-sm">
-        <div className="container mx-auto">
-          <p>Powered by AlertHub | Location data via Nominatim OpenStreetMap</p>
-        </div>
-      </footer>
     </div>
   );
 }

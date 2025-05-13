@@ -41,17 +41,17 @@ export function LoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto animate-fade-in">
+    <Card className="w-full max-w-md mx-auto animate-fade-in border-gray-800 bg-[#222]">
       <CardHeader>
-        <CardTitle className="text-2xl text-center">Sign In</CardTitle>
-        <CardDescription className="text-center">
+        <CardTitle className="text-2xl text-center text-white">Sign In</CardTitle>
+        <CardDescription className="text-center text-gray-400">
           Enter your email and password to access your account
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
+            <label htmlFor="email" className="text-sm font-medium text-gray-300">
               Email
             </label>
             <Input
@@ -61,12 +61,12 @@ export function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="your@email.com"
-              className="w-full"
+              className="w-full bg-[#333] border-gray-700 text-white"
               disabled={loading}
             />
           </div>
           <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
+            <label htmlFor="password" className="text-sm font-medium text-gray-300">
               Password
             </label>
             <Input
@@ -76,13 +76,13 @@ export function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="••••••••"
-              className="w-full"
+              className="w-full bg-[#333] border-gray-700 text-white"
               disabled={loading}
             />
           </div>
           <Button 
             type="submit" 
-            className="w-full"
+            className="w-full bg-[#D32F2F] hover:bg-[#B71C1C] text-white"
             disabled={loading}
           >
             {loading ? "Signing in..." : "Sign In"}
@@ -91,10 +91,10 @@ export function LoginForm() {
 
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
+            <div className="w-full border-t border-gray-700"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            <span className="px-2 bg-[#222] text-gray-400">Or continue with</span>
           </div>
         </div>
 
@@ -102,7 +102,7 @@ export function LoginForm() {
           type="button"
           variant="outline"
           onClick={handleGoogleSignIn}
-          className="w-full"
+          className="w-full border-gray-700 text-white hover:bg-[#333]"
           disabled={loading}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5 mr-2">
@@ -127,9 +127,9 @@ export function LoginForm() {
         </Button>
       </CardContent>
       <CardFooter className="flex justify-center">
-        <p className="text-sm text-center text-gray-600">
+        <p className="text-sm text-center text-gray-400">
           Don't have an account?{" "}
-          <Link to="/register" className="text-primary font-semibold hover:underline">
+          <Link to="/register" className="text-[#D32F2F] font-semibold hover:underline">
             Sign up
           </Link>
         </p>

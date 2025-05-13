@@ -7,14 +7,13 @@ export function Sidebar() {
   const location = useLocation();
   
   const links = [
-    { name: "Dashboard", href: "/", icon: "home" },
     { name: "My Alerts", href: "/alerts", icon: "alert" },
     { name: "Profile", href: "/profile", icon: "user" },
   ];
 
   return (
     <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 pt-16">
-      <div className="flex-1 flex flex-col min-h-0 border-r bg-white">
+      <div className="flex-1 flex flex-col min-h-0 border-r bg-[#1A1A1A] border-gray-800">
         <nav className="px-2 pt-6 space-y-1">
           {links.map((link) => {
             const isActive = link.href === '/' 
@@ -28,8 +27,8 @@ export function Sidebar() {
                 className={cn(
                   "group flex items-center px-4 py-3 text-sm font-medium rounded-md",
                   isActive
-                    ? "bg-primary text-white"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-[#D32F2F] text-white"
+                    : "text-gray-300 hover:bg-[#333]"
                 )}
               >
                 <span className="mr-3">{renderIcon(link.icon, isActive)}</span>
@@ -47,24 +46,6 @@ function renderIcon(icon: string, isActive: boolean) {
   const className = isActive ? "text-white" : "text-gray-400";
   
   switch (icon) {
-    case "home":
-      return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={className}
-        >
-          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          <polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
-      );
     case "alert":
       return (
         <svg

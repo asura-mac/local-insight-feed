@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ManualLocationEntry } from "@/components/onboarding/ManualLocationEntry";
 import { Tables } from "@/types/database.types";
+import { getCurrentPosition, reverseGeocode } from "@/lib/locationUtils";
+import { Loader2, MapPin } from "lucide-react";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -17,6 +19,8 @@ export default function Profile() {
   const [userData, setUserData] = useState<Tables<"users"> | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [showLocationUpdate, setShowLocationUpdate] = useState(false);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   
   useEffect(() => {
     const fetchUserData = async () => {
@@ -50,8 +54,25 @@ export default function Profile() {
     fetchUserData();
   }, [user, toast]);
   
+  const validatePhoneNumber = (phone: string): boolean => {
+    // Allow empty phone number
+    if (!phone) return true;
+    
+    // Basic Indian phone number validation: 10 digits starting with 6-9
+    const phoneRegex = /^[6-9]\d{9}$/;
+    return phoneRegex.test(phone);
+  };
+  
   const handlePhoneUpdate = async () => {
     if (!user) return;
+    
+    // Validate phone number
+    if (!validatePhoneNumber(phoneNumber)) {
+      setPhoneError("Please enter a valid 10-digit Indian mobile number");
+      return;
+    }
+    
+    setPhoneError(null);
     
     try {
       const { error } = await supabase
@@ -117,12 +138,65 @@ export default function Profile() {
       });
     }
   };
+  
+  const detectLocation = async () => {
+    setDetectingLocation(true);
+    
+    try {
+      const position = await getCurrentPosition();
+      const { latitude, longitude } = position.coords;
+      
+      console.log("Location coordinates:", { latitude, longitude });
+      
+      // Get location details using reverse geocoding
+      const locationData = await reverseGeocode(latitude, longitude);
+      
+      if (locationData.error) {
+        throw new Error(locationData.error);
+      }
+      
+      if (!locationData.country) {
+        throw new Error("Couldn't determine your country");
+      }
+      
+      console.log("Detected location:", locationData);
+      
+      // Set the location fields for update in ManualLocationEntry component
+      setShowLocationUpdate(true);
+      
+      // Return the detected location data to be used
+      handleLocationUpdate(
+        locationData.country || 'India',
+        locationData.state || '',
+        locationData.district || ''
+      );
+      
+      toast({
+        title: "Location Detected",
+        description: `Location set to ${[
+          locationData.district,
+          locationData.state,
+          locationData.country
+        ].filter(Boolean).join(", ")}`,
+      });
+    } catch (error: any) {
+      console.error("Location detection error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Could not detect location. Please enter manually.",
+        variant: "destructive",
+      });
+      setShowLocationUpdate(true);
+    } finally {
+      setDetectingLocation(false);
+    }
+  };
 
   return (
     <AppLayout>
       <div className="max-w-3xl mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Profile Settings</h1>
+          <h1 className="text-2xl font-bold text-white">Profile Settings</h1>
         </div>
 
         {loading ? (
@@ -164,10 +238,19 @@ export default function Profile() {
                     <label className="text-sm font-medium text-gray-300">Phone Number</label>
                     <Input 
                       value={phoneNumber} 
-                      onChange={(e) => setPhoneNumber(e.target.value)} 
+                      onChange={(e) => {
+                        setPhoneNumber(e.target.value);
+                        setPhoneError(null);
+                      }}
                       placeholder="Enter your phone number"
                       className="bg-[#333] text-white border-gray-700" 
                     />
+                    {phoneError && (
+                      <p className="text-xs text-[#F44336] mt-1">{phoneError}</p>
+                    )}
+                    <p className="text-xs text-gray-400">
+                      Format: 10-digit Indian mobile number (e.g., 9876543210)
+                    </p>
                   </div>
                   <Button 
                     onClick={handlePhoneUpdate}
@@ -196,12 +279,32 @@ export default function Profile() {
                       <p className="text-gray-300">
                         <strong>Current Location:</strong> {userData?.location || "No location set"}
                       </p>
-                      <Button 
-                        onClick={() => setShowLocationUpdate(true)}
-                        className="bg-[#D32F2F] hover:bg-[#B71C1C] text-white"
-                      >
-                        Update Location
-                      </Button>
+                      <div className="flex flex-wrap gap-3">
+                        <Button 
+                          onClick={() => setShowLocationUpdate(true)}
+                          className="bg-[#D32F2F] hover:bg-[#B71C1C] text-white"
+                        >
+                          Update Location Manually
+                        </Button>
+                        <Button 
+                          onClick={detectLocation}
+                          variant="outline"
+                          disabled={detectingLocation}
+                          className="border-gray-700 text-white hover:bg-[#333] hover:text-white flex items-center"
+                        >
+                          {detectingLocation ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Detecting...
+                            </>
+                          ) : (
+                            <>
+                              <MapPin className="h-4 w-4 mr-2" />
+                              Autodetect My Location
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </CardContent>

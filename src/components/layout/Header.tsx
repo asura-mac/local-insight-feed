@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AlertTriangle } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface UserLocationData {
   location?: string;
@@ -23,9 +24,10 @@ interface UserLocationData {
 export function Header() {
   const { user, signOut } = useAuth();
   const [userLocation, setUserLocation] = useState<UserLocationData | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   
   useEffect(() => {
-    const fetchUserLocation = async () => {
+    const fetchUserData = async () => {
       if (!user) return;
       
       try {
@@ -38,13 +40,24 @@ export function Header() {
         if (!error && data) {
           setUserLocation(data);
         }
+
+        // Check for Google avatar in user metadata
+        if (user.app_metadata?.provider === 'google' && user.user_metadata?.avatar_url) {
+          setAvatarUrl(user.user_metadata.avatar_url);
+        }
       } catch (error) {
-        console.error("Error fetching user location:", error);
+        console.error("Error fetching user data:", error);
       }
     };
     
-    fetchUserLocation();
+    fetchUserData();
   }, [user]);
+
+  // Get the first letter of the email for the avatar fallback
+  const getAvatarFallback = () => {
+    if (!user?.email) return "U";
+    return user.email.charAt(0).toUpperCase();
+  };
 
   return (
     <header className="border-b border-gray-800 bg-[#1A1A1A]">
@@ -66,10 +79,13 @@ export function Header() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-[#D32F2F] text-white">
-                    {user.email ? user.email.charAt(0).toUpperCase() : "U"}
-                  </div>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+                  <Avatar className="h-10 w-10 rounded-full border border-gray-700">
+                    <AvatarImage src={avatarUrl || ""} alt={user.email || "User"} />
+                    <AvatarFallback className="bg-[#D32F2F] text-white">
+                      {getAvatarFallback()}
+                    </AvatarFallback>
+                  </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-[#222] text-white border-gray-800">
