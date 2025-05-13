@@ -59,6 +59,7 @@ export function useTweets() {
   // Function to fetch tweets
   const fetchTweets = async () => {
     try {
+      // Using the supabase client's functions.invoke method which automatically includes the API key
       const { data: tweets, error } = await supabase.functions.invoke("fetch-ani-tweets");
       
       if (error) throw error;
