@@ -42,6 +42,30 @@ export type Database = {
         }
         Relationships: []
       }
+      emergency_alerts: {
+        Row: {
+          created_at: string
+          id: string
+          matched_keywords: string[]
+          title: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          matched_keywords: string[]
+          title: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          matched_keywords?: string[]
+          title?: string
+          url?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           country: string

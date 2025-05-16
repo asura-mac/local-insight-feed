@@ -6,8 +6,31 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-// Emergency keywords to filter headlines
+// Expanded emergency keywords to filter headlines
 const EMERGENCY_KEYWORDS = [
+  // General emergency alerts
+  'emergency alert today', 'breaking emergency news', 'red alert issued',
+  'emergency evacuation', 'national emergency alert', 'public safety alert',
+  'government emergency update', 'real-time emergency alert', 'disaster alert india',
+  'high alert issued', 'city lockdown news', 'state emergency news',
+  'emergency notification system', 'emergency broadcast today', 'ani emergency bulletin',
+  
+  // War and conflict related
+  'war breaking news', 'india border tensions', 'conflict zone alert',
+  'military operation alert', 'defense news india', 'ceasefire violation news',
+  'army movement alert', 'cross-border shelling', 'ani war report',
+  'warzone update', 'military strike alert', 'strategic airstrike news',
+  'indo-china border alert', 'indo-pak conflict', 'missile attack alert',
+  'troop deployment alert',
+  
+  // Natural disasters
+  'earthquake alert india', 'flood warning issued', 'tsunami warning india',
+  'cyclone update today', 'landslide alert', 'storm alert india',
+  'heavy rainfall red alert', 'severe weather warning', 'ani natural disaster report',
+  'real-time weather emergency', 'forest fire breaking news', 'disaster relief alert',
+  'ndma alert', 'imd red alert',
+  
+  // Original keywords
   'emergency', 'war', 'alert', 'blackout',
   'cyclone', 'windstorm', 'thunderstorm', 'thunderstorms',
   'emergency alert today'

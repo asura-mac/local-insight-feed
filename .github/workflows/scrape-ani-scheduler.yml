@@ -1,3 +1,4 @@
+
 name: Scrape ANI News Every 15 Minutes
 
 on:
@@ -11,4 +12,4 @@ jobs:
     steps:
       - name: Call Supabase Edge Function
         run: |
-          curl -X POST https://pjqxfwvvrwhbwccarsob.functions.supabase.co/scrape-ani-new
+          curl -X POST https://pjqxfwvvrwhbwccarsob.functions.supabase.co/scrape-ani-news

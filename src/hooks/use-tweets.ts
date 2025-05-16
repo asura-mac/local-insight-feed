@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -12,6 +13,7 @@ export interface Tweet {
 
 // Stub implementation for backward compatibility
 export function useTweets() {
+  console.warn("useTweets is deprecated. Please use useEmergencyAlerts instead.");
   return {
     tweets: [],
     loading: false,
