@@ -1,1 +1,6 @@
+
 project_id = "pjqxfwvvrwhbwccarsob"
+
+[functions.scrape-ani-news]
+verify_jwt = false
+schedule = "*/15 * * * *"
