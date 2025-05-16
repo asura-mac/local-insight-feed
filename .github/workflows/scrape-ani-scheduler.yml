@@ -1,0 +1,14 @@
+name: Scrape ANI News Every 15 Minutes
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # Every 15 minutes (UTC)
+  workflow_dispatch:
+
+jobs:
+  trigger-supabase-function:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Supabase Edge Function
+        run: |
+          curl -X POST https://pjqxfwvvrwhbwccarsob.functions.supabase.co/scrape-ani-new
