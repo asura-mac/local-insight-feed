@@ -70,44 +70,77 @@ async function scrapeANINews(url: string) {
     
     console.log(`Successfully fetched HTML from ${url} (${html.length} bytes)`);
     
-    // Extract headlines using updated selectors - the structure may have changed
+    // Extract headlines using updated selectors for various heading formats
     const headlines: { title: string; url: string; }[] = [];
     
-    // Main pattern for news headlines
-    const titleRegex = /<h3 class="[^"]*"><a href="([^"]+)"[^>]*>([^<]+)<\/a><\/h3>/gs;
+    // Pattern 1: h3 tags (previous implementation)
+    const h3Regex = /<h3 class="[^"]*"><a href="([^"]+)"[^>]*>([^<]+)<\/a><\/h3>/gs;
     let match;
-    while ((match = titleRegex.exec(html)) !== null) {
+    while ((match = h3Regex.exec(html)) !== null) {
       const url = match[1].startsWith('https://') ? match[1] : `https://www.aninews.in${match[1]}`;
-      const title = match[2].trim().replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
-      
+      const title = cleanHtmlEntities(match[2].trim());
       headlines.push({ title, url });
     }
     
-    // Alternate pattern - ANI often changes their HTML structure
-    if (headlines.length === 0) {
-      const altTitleRegex = /<div class="[^"]*title[^"]*">.*?<a href="([^"]+)".*?>(.*?)<\/a>/gs;
-      while ((match = altTitleRegex.exec(html)) !== null) {
+    // Pattern 2: h4 with class="title mt-3" (newly discovered)
+    const h4Regex = /<h4 class="title mt-3">(.*?)<\/h4>/gs;
+    while ((match = h4Regex.exec(html)) !== null) {
+      const title = cleanHtmlEntities(match[1].trim());
+      // For h4 tags without direct links, we'll use the current page URL as a fallback
+      // A better approach would be to find the parent <a> if possible
+      headlines.push({ title, url });
+    }
+    
+    // Pattern 3: h1 tags often used for main headlines
+    const h1Regex = /<h1[^>]*>(.*?)<\/h1>/gs;
+    while ((match = h1Regex.exec(html)) !== null) {
+      const title = cleanHtmlEntities(match[1].trim());
+      // Similar to h4, we use current URL as fallback
+      headlines.push({ title, url });
+    }
+    
+    // Pattern 4: Generic anchor tags with title attributes or containing text
+    const anchorRegex = /<a [^>]*href="([^"]+)"[^>]*>((?!<img|<svg).*?)<\/a>/gs;
+    while ((match = anchorRegex.exec(html)) !== null) {
+      let title = match[2].trim();
+      // Only include if it doesn't contain HTML tags (like images)
+      if (!/<[a-z][\s\S]*>/i.test(title) && title.length > 15) {
+        title = cleanHtmlEntities(title);
         const url = match[1].startsWith('https://') ? match[1] : `https://www.aninews.in${match[1]}`;
-        const title = match[2].trim().replace(/&amp;/g, '&')
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'");
-        
         headlines.push({ title, url });
       }
     }
     
-    console.log(`Extracted ${headlines.length} headlines from ${url}`);
-    return headlines;
+    // Pattern 5: Alternate div pattern (from previous version)
+    const altTitleRegex = /<div class="[^"]*title[^"]*">.*?<a href="([^"]+)".*?>(.*?)<\/a>/gs;
+    while ((match = altTitleRegex.exec(html)) !== null) {
+      const url = match[1].startsWith('https://') ? match[1] : `https://www.aninews.in${match[1]}`;
+      const title = cleanHtmlEntities(match[2].trim());
+      headlines.push({ title, url });
+    }
+    
+    // Remove duplicates based on title
+    const uniqueHeadlines = Array.from(
+      new Map(headlines.map(item => [item.title, item])).values()
+    );
+    
+    console.log(`Extracted ${uniqueHeadlines.length} headlines from ${url}`);
+    return uniqueHeadlines;
   } catch (error) {
     console.error(`Error scraping ${url}:`, error);
     return [];
   }
+}
+
+// Helper function to clean HTML entities
+function cleanHtmlEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/<[^>]*>/g, ''); // Strip any remaining HTML tags
 }
 
 // Function to check if a headline contains any emergency keywords
@@ -186,7 +219,11 @@ serve(async (req) => {
       "https://www.aninews.in/category/national/",
       "https://www.aninews.in/category/international/",
       "https://www.aninews.in/category/world/",
-      "https://www.aninews.in/category/india/" 
+      "https://www.aninews.in/category/india/",
+      // Adding some more possible news category URLs
+      "https://www.aninews.in/news/national/",
+      "https://www.aninews.in/news/",
+      "https://www.aninews.in/"
     ];
     
     // Scrape all URLs with a slight delay between each request
@@ -197,7 +234,7 @@ serve(async (req) => {
       
       // Add a small delay between requests to avoid being blocked
       if (url !== urlsToScrape[urlsToScrape.length - 1]) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Increased delay to 3 seconds
       }
     }
     
@@ -207,7 +244,9 @@ serve(async (req) => {
     
     // Log all headlines for debugging
     if (allHeadlines.length > 0) {
-      console.log("Sample headlines:", allHeadlines.slice(0, 3));
+      console.log("Sample headlines:", allHeadlines.slice(0, 5));
+    } else {
+      console.log("WARNING: No headlines were found across any URLs!");
     }
     
     // Filter headlines by emergency keywords
