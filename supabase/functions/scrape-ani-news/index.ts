@@ -44,14 +44,21 @@ const corsHeaders = {
   "Access-Control-Max-Age": "86400",
 };
 
-// Function to scrape ANI News
+// Function to scrape ANI News with enhanced anti-blocking measures
 async function scrapeANINews(url: string) {
   console.log(`Scraping URL: ${url}`);
   try {
+    // Use a more browser-like user agent and additional headers
     const response = await fetch(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; Lovable/1.0)",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.google.com/",
+        "Cache-Control": "no-cache"
       },
+      // Adding a slight delay to avoid rate limiting
+      signal: AbortSignal.timeout(30000), // 30-second timeout
     });
 
     if (!response.ok) {
@@ -59,6 +66,8 @@ async function scrapeANINews(url: string) {
     }
 
     const html = await response.text();
+    
+    console.log(`Successfully fetched HTML from ${url} (${html.length} bytes)`);
     
     // Extract headlines from div.category_news_title
     const headlines: { title: string; url: string; }[] = [];
@@ -76,6 +85,7 @@ async function scrapeANINews(url: string) {
       headlines.push({ title, url });
     }
     
+    console.log(`Extracted ${headlines.length} headlines from ${url}`);
     return headlines;
   } catch (error) {
     console.error(`Error scraping ${url}:`, error);
@@ -99,22 +109,42 @@ async function storeAlerts(alerts: any[]) {
   
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    console.log(`Attempting to upsert ${alerts.length} alerts with service role key`);
+    
+    // First check if the table exists and is accessible
+    const { data: tableCheck, error: tableError } = await supabase
+      .from('emergency_alerts')
+      .select('id')
+      .limit(1);
+    
+    if (tableError) {
+      console.error("Error accessing emergency_alerts table:", tableError);
+      throw tableError;
+    }
+    
+    console.log("Successfully connected to emergency_alerts table");
+    
+    // Prepare alert data for upsert
+    const alertsToUpsert = alerts.map(alert => ({
+      title: alert.title,
+      url: alert.url,
+      matched_keywords: alert.matched_keywords
+    }));
+    
+    console.log("Upserting alerts:", JSON.stringify(alertsToUpsert, null, 2));
+    
     const { data, error, count } = await supabase
       .from('emergency_alerts')
-      .upsert(
-        alerts.map(alert => ({
-          title: alert.title,
-          url: alert.url,
-          matched_keywords: alert.matched_keywords
-        })),
-        { onConflict: 'title,url', ignoreDuplicates: true }
-      )
+      .upsert(alertsToUpsert, { onConflict: 'title,url', ignoreDuplicates: true })
       .select('id');
     
     if (error) {
+      console.error("Error storing alerts:", error);
       throw error;
     }
     
+    console.log(`Successfully upserted alerts, returned ${data?.length || 0} new records`);
     return { count: data?.length || 0 };
   } catch (error) {
     console.error("Error storing alerts:", error);
@@ -141,13 +171,26 @@ serve(async (req) => {
       "https://www.aninews.in/news/world/"
     ];
     
-    // Scrape all URLs
-    const scrapingPromises = urlsToScrape.map(url => scrapeANINews(url));
-    const headlinesArrays = await Promise.all(scrapingPromises);
+    // Scrape all URLs with a slight delay between each request
+    const headlinesArrays = [];
+    for (const url of urlsToScrape) {
+      const headlines = await scrapeANINews(url);
+      headlinesArrays.push(headlines);
+      
+      // Add a small delay between requests to avoid being blocked
+      if (url !== urlsToScrape[urlsToScrape.length - 1]) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
     
     // Flatten the arrays of headlines
     const allHeadlines = headlinesArrays.flat();
     console.log(`Total headlines scraped: ${allHeadlines.length}`);
+    
+    // Log all headlines for debugging
+    if (allHeadlines.length > 0) {
+      console.log("Sample headlines:", allHeadlines.slice(0, 3));
+    }
     
     // Filter headlines by emergency keywords
     const emergencyAlerts = allHeadlines
@@ -162,6 +205,7 @@ serve(async (req) => {
       );
     
     console.log(`Emergency alerts found: ${emergencyAlerts.length}`);
+    console.log("🚨 Matched emergency alerts:", emergencyAlerts);
     
     // Store filtered alerts in Supabase
     const result = await storeAlerts(emergencyAlerts);

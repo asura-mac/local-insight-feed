@@ -30,18 +30,55 @@ export default function Onboarding() {
       
       console.log("Saving user location:", { locationString, country, state, district });
       
-      // Save user data in the database
-      const { error } = await supabase
+      // First check if user record exists
+      const { data: existingUser, error: checkError } = await supabase
         .from('users')
-        .update({
-          location: locationString,
-          country,
-          state,
-          district,
-        })
-        .eq('id', user.id);
+        .select('id')
+        .eq('id', user.id)
+        .single();
+        
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        console.error("Error checking user existence:", checkError);
+        throw checkError;
+      }
       
-      if (error) throw error;
+      let updateError;
+      
+      if (existingUser) {
+        // Update existing user record
+        console.log("Updating existing user record");
+        const { error } = await supabase
+          .from('users')
+          .update({
+            location: locationString,
+            country,
+            state,
+            district,
+          })
+          .eq('id', user.id);
+          
+        updateError = error;
+      } else {
+        // Insert new user record
+        console.log("Creating new user record");
+        const { error } = await supabase
+          .from('users')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            location: locationString,
+            country,
+            state,
+            district,
+          });
+          
+        updateError = error;
+      }
+      
+      if (updateError) {
+        console.error("Error saving user data:", updateError);
+        throw updateError;
+      }
       
       toast.success("Location saved successfully!");
       

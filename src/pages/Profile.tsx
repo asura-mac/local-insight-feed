@@ -75,12 +75,42 @@ export default function Profile() {
     setPhoneError(null);
     
     try {
-      const { error } = await supabase
+      // First check if user exists
+      const { data: existingUser, error: checkError } = await supabase
         .from('users')
-        .update({ phone_number: phoneNumber })
-        .eq('id', user.id);
+        .select('id')
+        .eq('id', user.id)
+        .single();
+        
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error("Error checking user existence:", checkError);
+        throw checkError;
+      }
       
-      if (error) throw error;
+      let updateError;
+      
+      if (existingUser) {
+        // Update existing record
+        const { error } = await supabase
+          .from('users')
+          .update({ phone_number: phoneNumber })
+          .eq('id', user.id);
+          
+        updateError = error;
+      } else {
+        // Create new record
+        const { error } = await supabase
+          .from('users')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            phone_number: phoneNumber
+          });
+          
+        updateError = error;
+      }
+      
+      if (updateError) throw updateError;
       
       toast({
         title: "Success",
@@ -103,17 +133,50 @@ export default function Profile() {
       // Create location string
       const locationString = [district, state, country].filter(Boolean).join(", ");
       
-      const { error } = await supabase
+      // First check if user exists
+      const { data: existingUser, error: checkError } = await supabase
         .from('users')
-        .update({
-          location: locationString,
-          country,
-          state,
-          district,
-        })
-        .eq('id', user.id);
+        .select('id')
+        .eq('id', user.id)
+        .single();
+        
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error("Error checking user existence:", checkError);
+        throw checkError;
+      }
       
-      if (error) throw error;
+      let updateError;
+      
+      if (existingUser) {
+        // Update existing record
+        const { error } = await supabase
+          .from('users')
+          .update({
+            location: locationString,
+            country,
+            state,
+            district,
+          })
+          .eq('id', user.id);
+          
+        updateError = error;
+      } else {
+        // Create new record
+        const { error } = await supabase
+          .from('users')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            location: locationString,
+            country,
+            state,
+            district,
+          });
+          
+        updateError = error;
+      }
+      
+      if (updateError) throw updateError;
       
       setUserData(prev => prev ? {
         ...prev,
