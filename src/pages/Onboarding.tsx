@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { LocationDetection } from "@/components/onboarding/LocationDetection";
 import { ManualLocationEntry } from "@/components/onboarding/ManualLocationEntry";
-import { Header } from "@/components/layout/Header";
+import Header from "@/components/layout/Header";
 
 export default function Onboarding() {
   const [step, setStep] = useState<"detect" | "manual">("detect");

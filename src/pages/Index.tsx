@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Header } from "@/components/layout/Header"; 
+import Header from "@/components/layout/Header"; 
 
 export default function Index() {
   const { user, loading } = useAuth();
