@@ -184,9 +184,10 @@ async function storeAlerts(alerts: any[]) {
     
     console.log("Upserting alerts:", JSON.stringify(alertsToUpsert, null, 2));
     
+    // Modified to use just 'title' as the conflict target instead of 'title,url'
     const { data, error, count } = await supabase
       .from('emergency_alerts')
-      .upsert(alertsToUpsert, { onConflict: 'title,url', ignoreDuplicates: true })
+      .upsert(alertsToUpsert, { onConflict: 'title', ignoreDuplicates: true })
       .select('id');
     
     if (error) {
