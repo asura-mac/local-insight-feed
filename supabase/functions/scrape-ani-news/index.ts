@@ -48,6 +48,7 @@ const corsHeaders = {
 async function scrapeANINews(url: string) {
   console.log(`Scraping URL: ${url}`);
   try {
+    // Updated URLs - ANI News has changed their URL structure
     // Use a more browser-like user agent and additional headers
     const response = await fetch(url, {
       headers: {
@@ -69,13 +70,14 @@ async function scrapeANINews(url: string) {
     
     console.log(`Successfully fetched HTML from ${url} (${html.length} bytes)`);
     
-    // Extract headlines from div.category_news_title
+    // Extract headlines using updated selectors - the structure may have changed
     const headlines: { title: string; url: string; }[] = [];
-    const titleDivRegex = /<div class="category_news_title">.*?<a href="([^"]+)".*?>(.*?)<\/a>/gs;
     
+    // Main pattern for news headlines
+    const titleRegex = /<h3 class="[^"]*"><a href="([^"]+)"[^>]*>([^<]+)<\/a><\/h3>/gs;
     let match;
-    while ((match = titleDivRegex.exec(html)) !== null) {
-      const url = match[1];
+    while ((match = titleRegex.exec(html)) !== null) {
+      const url = match[1].startsWith('https://') ? match[1] : `https://www.aninews.in${match[1]}`;
       const title = match[2].trim().replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
@@ -83,6 +85,21 @@ async function scrapeANINews(url: string) {
         .replace(/&#39;/g, "'");
       
       headlines.push({ title, url });
+    }
+    
+    // Alternate pattern - ANI often changes their HTML structure
+    if (headlines.length === 0) {
+      const altTitleRegex = /<div class="[^"]*title[^"]*">.*?<a href="([^"]+)".*?>(.*?)<\/a>/gs;
+      while ((match = altTitleRegex.exec(html)) !== null) {
+        const url = match[1].startsWith('https://') ? match[1] : `https://www.aninews.in${match[1]}`;
+        const title = match[2].trim().replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'");
+        
+        headlines.push({ title, url });
+      }
     }
     
     console.log(`Extracted ${headlines.length} headlines from ${url}`);
@@ -164,11 +181,12 @@ serve(async (req) => {
   try {
     console.log("Starting ANI News scraping job");
     
-    // URLs to scrape
+    // Updated URLs to scrape - using current ANI News URL structure
     const urlsToScrape = [
-      "https://www.aninews.in/news/national/",
-      "https://www.aninews.in/news/international/",
-      "https://www.aninews.in/news/world/"
+      "https://www.aninews.in/category/national/",
+      "https://www.aninews.in/category/international/",
+      "https://www.aninews.in/category/world/",
+      "https://www.aninews.in/category/india/" 
     ];
     
     // Scrape all URLs with a slight delay between each request
