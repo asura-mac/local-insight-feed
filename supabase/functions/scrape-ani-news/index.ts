@@ -196,10 +196,44 @@ async function storeAlerts(alerts: any[]) {
     }
     
     console.log(`Successfully upserted alerts, returned ${data?.length || 0} new records`);
+    
+    // Clean up old alerts (older than 6 hours)
+    await cleanupOldAlerts(supabase);
+    
     return { count: data?.length || 0 };
   } catch (error) {
     console.error("Error storing alerts:", error);
     throw error;
+  }
+}
+
+// Function to clean up old alerts (older than 6 hours)
+async function cleanupOldAlerts(supabase: any) {
+  try {
+    // Calculate timestamp for 6 hours ago
+    const sixHoursAgo = new Date();
+    sixHoursAgo.setHours(sixHoursAgo.getHours() - 6);
+    const cutoffTime = sixHoursAgo.toISOString();
+    
+    console.log(`Cleaning up alerts older than ${cutoffTime}`);
+    
+    // Delete records older than 6 hours
+    const { data, error, count } = await supabase
+      .from('emergency_alerts')
+      .delete()
+      .lt('created_at', cutoffTime)
+      .select('id');
+    
+    if (error) {
+      console.error("Error cleaning up old alerts:", error);
+      throw error;
+    }
+    
+    console.log(`Successfully removed ${count || 0} old alerts`);
+    return { count: count || 0 };
+  } catch (error) {
+    console.error("Error cleaning up old alerts:", error);
+    return { count: 0 };
   }
 }
 
@@ -271,7 +305,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Scraping completed. Found ${emergencyAlerts.length} emergency alerts, stored ${result.count} new alerts.`,
+        message: `Scraping completed. Found ${emergencyAlerts.length} emergency alerts, stored ${result.count} new alerts. Old alerts cleaned up.`,
         alerts: emergencyAlerts,
       }),
       {
