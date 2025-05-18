@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -151,62 +150,6 @@ function containsEmergencyKeywords(title: string): string[] {
   );
 }
 
-// Function to store alerts in Supabase
-async function storeAlerts(alerts: any[]) {
-  if (alerts.length === 0) {
-    return { count: 0 };
-  }
-  
-  try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    console.log(`Attempting to upsert ${alerts.length} alerts with service role key`);
-    
-    // First check if the table exists and is accessible
-    const { data: tableCheck, error: tableError } = await supabase
-      .from('emergency_alerts')
-      .select('id')
-      .limit(1);
-    
-    if (tableError) {
-      console.error("Error accessing emergency_alerts table:", tableError);
-      throw tableError;
-    }
-    
-    console.log("Successfully connected to emergency_alerts table");
-    
-    // Prepare alert data for upsert
-    const alertsToUpsert = alerts.map(alert => ({
-      title: alert.title,
-      url: alert.url,
-      matched_keywords: alert.matched_keywords
-    }));
-    
-    console.log("Upserting alerts:", JSON.stringify(alertsToUpsert, null, 2));
-    
-    // Modified to use just 'title' as the conflict target instead of 'title,url'
-    const { data, error, count } = await supabase
-      .from('emergency_alerts')
-      .upsert(alertsToUpsert, { onConflict: 'title', ignoreDuplicates: true })
-      .select('id');
-    
-    if (error) {
-      console.error("Error storing alerts:", error);
-      throw error;
-    }
-    
-    console.log(`Successfully upserted alerts, returned ${data?.length || 0} new records`);
-    
-    // Clean up old alerts (older than 6 hours)
-    await cleanupOldAlerts(supabase);
-    
-    return { count: data?.length || 0 };
-  } catch (error) {
-    console.error("Error storing alerts:", error);
-    throw error;
-  }
-}
-
 // Function to clean up old alerts (older than 6 hours)
 async function cleanupOldAlerts(supabase: any) {
   try {
@@ -234,6 +177,68 @@ async function cleanupOldAlerts(supabase: any) {
   } catch (error) {
     console.error("Error cleaning up old alerts:", error);
     return { count: 0 };
+  }
+}
+
+// Function to store alerts in Supabase
+async function storeAlerts(alerts: any[]) {
+  if (alerts.length === 0) {
+    console.log("No alerts to store, skipping database operation");
+    return { count: 0 };
+  }
+  
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    console.log(`Attempting to upsert ${alerts.length} alerts with service role key`);
+    console.log("Service Role Key available:", !!supabaseServiceKey);
+    console.log("Supabase URL:", supabaseUrl);
+    
+    // First check if the table exists and is accessible
+    const { data: tableCheck, error: tableError } = await supabase
+      .from('emergency_alerts')
+      .select('id')
+      .limit(1);
+    
+    if (tableError) {
+      console.error("Error accessing emergency_alerts table:", tableError);
+      throw tableError;
+    }
+    
+    console.log("Successfully connected to emergency_alerts table");
+    
+    // Prepare alert data for upsert
+    const alertsToUpsert = alerts.map(alert => ({
+      title: alert.title,
+      url: alert.url,
+      matched_keywords: alert.matched_keywords
+    }));
+    
+    console.log("Upserting alerts:", JSON.stringify(alertsToUpsert, null, 2));
+    
+    // Modified to use just 'title' as the conflict target instead of 'title,url'
+    const { data, error } = await supabase
+      .from('emergency_alerts')
+      .upsert(alertsToUpsert, { 
+        onConflict: 'title',  // Changed from 'title,url' to just 'title'
+        ignoreDuplicates: true 
+      })
+      .select('id');
+    
+    if (error) {
+      console.error("Error storing alerts:", error);
+      throw error;
+    }
+    
+    console.log(`Successfully upserted alerts, returned ${data?.length || 0} new records`);
+    
+    // Clean up old alerts (older than 6 hours)
+    await cleanupOldAlerts(supabase);
+    
+    return { count: data?.length || 0 };
+  } catch (error) {
+    console.error("Error storing alerts:", error);
+    throw error;
   }
 }
 
@@ -300,12 +305,31 @@ serve(async (req) => {
     console.log("🚨 Matched emergency alerts:", emergencyAlerts);
     
     // Store filtered alerts in Supabase
-    const result = await storeAlerts(emergencyAlerts);
+    let result;
+    try {
+      result = await storeAlerts(emergencyAlerts);
+      console.log("Storage result:", result);
+    } catch (storageError) {
+      console.error("Failed to store alerts:", storageError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Failed to store alerts: ${storageError.message}`,
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
     
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Scraping completed. Found ${emergencyAlerts.length} emergency alerts, stored ${result.count} new alerts. Old alerts cleaned up.`,
+        message: `Scraping completed. Found ${emergencyAlerts.length} emergency alerts, stored ${result?.count || 0} new alerts. Old alerts cleaned up.`,
         alerts: emergencyAlerts,
       }),
       {
