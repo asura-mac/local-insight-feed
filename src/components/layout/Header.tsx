@@ -12,13 +12,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { BellRing, MoonIcon, SunIcon } from "lucide-react";
-import { useTheme } from "next-themes";
+import { BellRing } from "lucide-react";
 
 const Header = () => {
   const { user, signOut } = useAuth();
   const location = useLocation();
-  const { setTheme } = useTheme();
 
   // Function to get user initial for avatar
   const getUserInitial = () => {
@@ -76,17 +74,13 @@ const Header = () => {
         </div>
 
         <div className="ml-auto flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() =>
-              setTheme((prev: string) => (prev === "light" ? "dark" : "light"))
-            }
-          >
-            <SunIcon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <MoonIcon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span className="sr-only">Toggle theme</span>
-          </Button>
+          <Link to="/notifications">
+            <Button variant="ghost" size="sm" className="mr-2">
+              <BellRing className="h-5 w-5" />
+              <span className="sr-only">Notifications</span>
+            </Button>
+          </Link>
+          
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

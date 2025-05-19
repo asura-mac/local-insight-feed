@@ -12,6 +12,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { BellRing, BellOff, Info, Smartphone, Monitor, Share2, Download } from "lucide-react";
 
 // Define interface for a detected device type
@@ -400,12 +401,19 @@ const NotificationsPage = () => {
               </div>
               
               <div className="mb-4">
-                <p className="text-sm mb-2 text-gray-300">
-                  <strong className="text-white">Status:</strong> {subscription ? 
-                    <span className="text-green-400">Subscribed to alerts</span> : 
-                    <span className="text-gray-500">Not subscribed</span>
-                  }
-                </p>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium text-white">Notification Status</p>
+                    <p className="text-sm text-gray-400">
+                      {subscription ? 'Enabled' : 'Disabled'}
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={subscription} 
+                    onCheckedChange={toggleSubscription}
+                  />
+                </div>
+                
                 <p className="text-sm mb-2 text-gray-300">
                   <strong className="text-white">Notification permission:</strong> <span className="text-gray-300">{notificationPermission}</span>
                 </p>

@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -5,34 +6,75 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-// Expanded emergency keywords to filter headlines
+// Updated emergency keywords list focused on India-Pakistan conflict scenarios
 const EMERGENCY_KEYWORDS = [
-  // General emergency alerts
-  'emergency alert today', 'breaking emergency news', 'red alert issued',
-  'emergency evacuation', 'national emergency alert', 'public safety alert',
-  'government emergency update', 'real-time emergency alert', 'disaster alert india',
-  'high alert issued', 'city lockdown news', 'state emergency news',
-  'emergency notification system', 'emergency broadcast today', 'ani emergency bulletin',
+  // Core India-Pakistan War Keywords
+  'India Pakistan war', 'India Pakistan conflict', 'India Pakistan border tension',
+  'India Pakistan ceasefire violation', 'Indo-Pak war', 'India retaliates Pakistan',
+  'Pakistan violates LoC', 'LoC tension India Pakistan', 'cross-border firing',
+  'Pakistan drone India border', 'India intercepts Pakistan UAV', 'terror camp destroyed Pakistan',
+  'India airstrike Pakistan', 'BSF fires at Pakistan intruders', 'Indian soldier martyred LoC',
+  'Pakistani shelling Indian post', 'Pak Army attack India', 'war clouds India Pakistan',
+  'Pakistani troops infiltrate', 'India raises war alert', 'Indian Air Force alert',
+  'LoC hot zone', 'LoC surveillance alert', 'Pak army mobilizes', 'Indian navy border alert',
+  'nuclear threat India Pakistan', 'Pakistan threatens India', 'India defends LoC',
+  'militant infiltration LoC', 'India army movement towards border',
+  'LoC escalation India Pakistan', 'LoC sniper firing',
   
-  // War and conflict related
-  'war breaking news', 'india border tensions', 'conflict zone alert',
-  'military operation alert', 'defense news india', 'ceasefire violation news',
-  'army movement alert', 'cross-border shelling', 'ani war report',
-  'warzone update', 'military strike alert', 'strategic airstrike news',
-  'indo-china border alert', 'indo-pak conflict', 'missile attack alert',
-  'troop deployment alert',
+  // North India
+  'Jammu Kashmir war alert', 'Jammu LoC firing', 'Kashmir border escalation',
+  'Punjab border tension', 'Punjab drone infiltration', 'Punjab BSF alert',
+  'Himachal Pradesh war alert', 'Uttarakhand border alert', 'Delhi on high alert',
+  'Delhi war readiness', 'Haryana military alert', 'Haryana troop movement',
   
-  // Natural disasters
-  'earthquake alert india', 'flood warning issued', 'tsunami warning india',
-  'cyclone update today', 'landslide alert', 'storm alert india',
-  'heavy rainfall red alert', 'severe weather warning', 'ani natural disaster report',
-  'real-time weather emergency', 'forest fire breaking news', 'disaster relief alert',
-  'ndma alert', 'imd red alert',
+  // West India
+  'Rajasthan war alert', 'Rajasthan LoC activity', 'Rajasthan drone alert',
+  'Gujarat border tension', 'Gujarat coastal alert', 'Gujarat navy drill',
+  'Maharashtra terror alert', 'Maharashtra war drill', 'Goa war zone alert',
   
-  // Original keywords
-  'emergency', 'war', 'alert', 'blackout',
-  'cyclone', 'windstorm', 'thunderstorm', 'thunderstorms',
-  'emergency alert today'
+  // East India
+  'Bihar war alert', 'Bihar Pakistan threat', 'West Bengal infiltration alert',
+  'West Bengal border tension', 'Jharkhand war intelligence', 'Jharkhand militant alert',
+  'Odisha border intelligence', 'Odisha coastal surveillance', 'Chhattisgarh anti-terror alert',
+  
+  // Central India
+  'Madhya Pradesh war update', 'MP India-Pakistan alert', 'UP war news',
+  'Uttar Pradesh war alert', 'UP border activity',
+  
+  // South India
+  'Andhra Pradesh alert India Pakistan', 'Andhra Air Force readiness', 'Telangana terror alert',
+  'Telangana war message', 'Karnataka military alert', 'Karnataka India Pakistan conflict',
+  'Tamil Nadu navy alert', 'Tamil Nadu Indo-Pak alert', 'Kerala Pakistan support alert',
+  'Kerala coastal surveillance',
+  
+  // North-East India
+  'Assam war alert', 'Assam terror movement', 'Manipur LoC influence',
+  'Meghalaya Indo-Pak tension', 'Mizoram war alert', 'Nagaland cross-border alert',
+  'Tripura terror watch', 'Sikkim war zone news', 'Arunachal Pradesh Pakistan mention',
+  
+  // Union Territories
+  'Ladakh LoC alert', 'Ladakh troop movement', 'Andaman Nicobar navy alert',
+  'Lakshadweep war readiness', 'Chandigarh security alert', 'Puducherry Air Force drill',
+  'Dadra Nagar Haveli India Pakistan alert', 'Daman Diu security alert', 'Delhi UT missile alert',
+  
+  // Foreign Geopolitical (Only India-Pakistan Related)
+  'China supports Pakistan against India', 'China warns India on war', 'US supports India against Pakistan',
+  'Russia on India Pakistan tension', 'UK reacts India Pakistan war', 'UN appeals India Pakistan peace',
+  'OIC condemns Indian strike', 'Israel supports Indian action', 'Turkey defends Pakistan',
+  'France urges Indo-Pak calm', 'Bangladesh on Indo-Pak war', 'Nepal reacts India Pakistan war',
+  'Sri Lanka Indo-Pak reaction', 'Saudi Arabia India Pakistan war update', 'Taliban statement on India Pakistan',
+  'UAE comments India Pakistan', 'Afghanistan reacts India Pakistan'
+];
+
+// Exclusion filter for headlines when they don't contain India-Pakistan related terms
+const EXCLUSION_KEYWORDS = [
+  'Ukraine', 'Russia', 'Gaza', 'Israel Hamas', 'Palestine', 'Iran', 'Syria',
+  'Hezbollah', 'Yemen', 'North Korea', 'South Korea', 'Taiwan', 'China Taiwan',
+  'Lebanon', 'ISIS', 'Middle East', 'Red Sea', 'Houthis', 'NATO', 'Sudan',
+  'Libya', 'Somalia', 'Ethiopia', 'DR Congo', 'Kosovo', 'Nagorno-Karabakh',
+  'Venezuela', 'Global war update', 'World War III', 'International conflict',
+  'US missile strike', 'Hezbollah rocket', 'Israel retaliation', 'Iran nuclear',
+  'China South Sea', 'Houthi rebels'
 ];
 
 // CORS headers for all responses
@@ -142,12 +184,26 @@ function cleanHtmlEntities(text: string): string {
     .replace(/<[^>]*>/g, ''); // Strip any remaining HTML tags
 }
 
-// Function to check if a headline contains any emergency keywords
+// Function to check if a headline contains any emergency keywords and exclude if it only contains exclusion keywords
 function containsEmergencyKeywords(title: string): string[] {
   const lowerTitle = title.toLowerCase();
-  return EMERGENCY_KEYWORDS.filter(keyword => 
+  
+  // Check if the headline contains any excluded terms
+  const containsExcluded = EXCLUSION_KEYWORDS.some(keyword => 
     lowerTitle.includes(keyword.toLowerCase())
   );
+  
+  // Check if the headline contains any India-Pakistan keywords
+  const matchedKeywords = EMERGENCY_KEYWORDS.filter(keyword => 
+    lowerTitle.includes(keyword.toLowerCase())
+  );
+  
+  // If the headline contains exclusion keywords but no India-Pakistan keywords, ignore it
+  if (containsExcluded && matchedKeywords.length === 0) {
+    return [];
+  }
+  
+  return matchedKeywords;
 }
 
 // Function to clean up old alerts (older than 6 hours)
@@ -220,7 +276,7 @@ async function storeAlerts(alerts: any[]) {
     const { data, error } = await supabase
       .from('emergency_alerts')
       .upsert(alertsToUpsert, { 
-        onConflict: 'title',  // Changed from 'title,url' to just 'title'
+        onConflict: 'title',
         ignoreDuplicates: true 
       })
       .select('id');

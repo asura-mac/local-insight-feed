@@ -16,7 +16,7 @@ import Alerts from "./pages/Alerts";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import AuthCallback from "./pages/AuthCallback";
-import Notifications from "./pages/Notifications"; // Import the new page
+import Notifications from "./pages/Notifications";
 
 // Initialize react-query client
 const queryClient = new QueryClient({
@@ -41,7 +41,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/notifications" element={<Notifications />} /> {/* Add public access to notifications */}
+            <Route path="/notifications" element={<Notifications />} />
             
             {/* Protected routes */}
             <Route 

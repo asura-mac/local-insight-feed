@@ -26,7 +26,7 @@ export function useEmergencyAlerts() {
       const cutoffTime = sixHoursAgo.toISOString();
       
       const { data, error } = await supabase
-        .from('emergency_alerts') // Changed from 'alerts' to 'emergency_alerts'
+        .from('emergency_alerts')
         .select('*')
         .gte('created_at', cutoffTime)
         .order('created_at', { ascending: false })
@@ -59,7 +59,7 @@ export function useEmergencyAlerts() {
         { 
           event: 'INSERT', 
           schema: 'public', 
-          table: 'emergency_alerts' // Changed from 'alerts' to 'emergency_alerts'
+          table: 'emergency_alerts'
         },
         (payload) => {
           // Add new alert to the top of the list
@@ -71,7 +71,7 @@ export function useEmergencyAlerts() {
         {
           event: 'DELETE',
           schema: 'public',
-          table: 'emergency_alerts' // Changed from 'alerts' to 'emergency_alerts'
+          table: 'emergency_alerts'
         },
         (payload) => {
           // Remove deleted alert from the list
