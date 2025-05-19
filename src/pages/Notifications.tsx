@@ -1,9 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { useEmergencyAlerts } from "@/hooks/use-emergency-alerts";
 import { EmergencyAlertCard } from "@/components/EmergencyAlerts";
-import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -13,74 +11,32 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { BellRing, BellOff, Info, Smartphone, Monitor, Share2, Download } from "lucide-react";
-
-// Define interface for a detected device type
-interface DeviceInfo {
-  type: 'desktop' | 'mobile';
-  os: 'ios' | 'android' | 'windows' | 'macos' | 'linux' | 'other';
-  browser: string;
-  supportsNotifications: boolean;
-}
+import { BellRing, BellOff, Info, Smartphone, Monitor, Share2, Download, CheckCircle, AlertCircle } from "lucide-react";
+import { useDeviceInfo } from "@/hooks/use-device-info";
+import { useNotifications } from "@/hooks/use-notifications";
 
 const NotificationsPage = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const { alerts, loading, error, refreshAlerts } = useEmergencyAlerts();
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | "default">("default");
-  const [subscription, setSubscription] = useState<boolean>(false);
-  const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState<string>("notifications");
-
-  // Detect device information
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    let deviceType: 'desktop' | 'mobile' = 'desktop';
-    let os: 'ios' | 'android' | 'windows' | 'macos' | 'linux' | 'other' = 'other';
-    let browser = 'unknown';
-    
-    // Detect if mobile
-    if (/Mobi|Android|iPhone|iPad|iPod/i.test(ua)) {
-      deviceType = 'mobile';
-      
-      // Detect OS
-      if (/iPhone|iPad|iPod/i.test(ua)) {
-        os = 'ios';
-      } else if (/Android/i.test(ua)) {
-        os = 'android';
-      }
-    } else {
-      // Desktop OS detection
-      if (/Windows/i.test(ua)) os = 'windows';
-      else if (/Macintosh/i.test(ua)) os = 'macos';
-      else if (/Linux/i.test(ua)) os = 'linux';
-    }
-    
-    // Browser detection
-    if (/Chrome/i.test(ua) && !/Chromium|Edge|Edg|OPR|SamsungBrowser/i.test(ua)) {
-      browser = 'Chrome';
-    } else if (/Firefox/i.test(ua)) {
-      browser = 'Firefox';
-    } else if (/Safari/i.test(ua) && !/Chrome|Chromium|Edge|Edg|OPR/i.test(ua)) {
-      browser = 'Safari';
-    } else if (/Edge|Edg/i.test(ua)) {
-      browser = 'Edge';
-    } else if (/Opera|OPR/i.test(ua)) {
-      browser = 'Opera';
-    }
-    
-    // Check if browser supports notifications
-    const supportsNotifications = "Notification" in window;
-    
-    setDeviceInfo({
-      type: deviceType,
-      os,
-      browser,
-      supportsNotifications
-    });
-    
-  }, []);
+  const { toast } = useToast();
+  const { 
+    deviceInfo, 
+    isIOS, 
+    isAndroid,
+    isMobile,
+    isPWA,
+    supportsNotifications 
+  } = useDeviceInfo();
+  
+  const {
+    notificationPermission,
+    subscription,
+    isLoading,
+    requestNotificationPermission,
+    toggleSubscription,
+    testConnection
+  } = useNotifications();
 
   // Update current time every minute to refresh relative time displays
   useEffect(() => {
@@ -91,131 +47,6 @@ const NotificationsPage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Check notification permission on component mount
-  useEffect(() => {
-    if ("Notification" in window) {
-      setNotificationPermission(Notification.permission);
-    }
-    
-    // Check if user previously subscribed (stored in localStorage)
-    const isSubscribed = localStorage.getItem("emergencyAlertsSubscribed") === "true";
-    setSubscription(isSubscribed);
-  }, []);
-
-  // Subscribe to real-time updates for new alerts
-  useEffect(() => {
-    if (subscription && notificationPermission === "granted") {
-      // Set up real-time subscription for new alerts
-      const channel = supabase
-        .channel('emergency_alerts_notifications')
-        .on(
-          'postgres_changes', 
-          { 
-            event: 'INSERT', 
-            schema: 'public', 
-            table: 'emergency_alerts' 
-          },
-          (payload) => {
-            const newAlert = payload.new as any;
-            // Show browser notification for new alert
-            showNotification(newAlert.title, {
-              body: `Keywords: ${newAlert.matched_keywords.join(', ')}`,
-              icon: '/favicon.ico',
-              tag: newAlert.id,
-              data: { url: newAlert.url }
-            });
-          }
-        )
-        .subscribe();
-        
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [subscription, notificationPermission]);
-
-  const requestNotificationPermission = async () => {
-    if (!("Notification" in window)) {
-      toast({
-        title: "Notifications Not Supported",
-        description: "Your browser does not support desktop notifications.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    try {
-      const permission = await Notification.requestPermission();
-      setNotificationPermission(permission);
-      
-      if (permission === "granted") {
-        setSubscription(true);
-        localStorage.setItem("emergencyAlertsSubscribed", "true");
-        
-        toast({
-          title: "Notifications Enabled",
-          description: "You will now receive emergency alert notifications.",
-        });
-        
-        // Show a test notification
-        showNotification("Notifications Enabled", {
-          body: "You will now receive emergency alerts when they are detected.",
-          icon: '/favicon.ico',
-        });
-      }
-    } catch (error: any) {
-      console.error("Error requesting notification permission:", error);
-      toast({
-        title: "Permission Error",
-        description: "There was an error requesting notification permission.",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const toggleSubscription = () => {
-    if (subscription) {
-      // Unsubscribe
-      setSubscription(false);
-      localStorage.removeItem("emergencyAlertsSubscribed");
-      toast({
-        title: "Notifications Disabled",
-        description: "You will no longer receive emergency alert notifications.",
-      });
-    } else if (notificationPermission === "granted") {
-      // Subscribe if permission is already granted
-      setSubscription(true);
-      localStorage.setItem("emergencyAlertsSubscribed", "true");
-      toast({
-        title: "Notifications Enabled",
-        description: "You will now receive emergency alert notifications.",
-      });
-    } else {
-      // Request permission if not already granted
-      requestNotificationPermission();
-    }
-  };
-  
-  const showNotification = (title: string, options: NotificationOptions) => {
-    if (!("Notification" in window) || Notification.permission !== "granted") {
-      return;
-    }
-    
-    try {
-      const notification = new Notification(title, options);
-      
-      // Handle notification click (open the news article)
-      notification.onclick = () => {
-        if (options.data && options.data.url) {
-          window.open(options.data.url, '_blank');
-        }
-        notification.close();
-      };
-    } catch (error) {
-      console.error("Error showing notification:", error);
-    }
-  };
-  
   // Format time elapsed since alert was posted
   const getTimeElapsed = (timestamp: string) => {
     const alertTime = new Date(timestamp);
@@ -273,82 +104,124 @@ const NotificationsPage = () => {
     }
   };
 
-  // Function to check if the application is installed as PWA
-  const isPWA = () => {
-    return window.matchMedia('(display-mode: standalone)').matches || 
-           (window.navigator as any).standalone === true;
-  };
-
   // Function to provide instructions based on device
   const getNotificationInstructions = () => {
     if (!deviceInfo) return null;
     
-    if (deviceInfo.type === 'mobile') {
-      if (deviceInfo.os === 'ios') {
-        return (
-          <Alert className="mt-4 bg-blue-50">
-            <AlertTitle className="flex items-center">
-              <Smartphone className="mr-2 h-4 w-4" /> iOS Device Detected
-            </AlertTitle>
-            <AlertDescription className="space-y-2">
-              <p className="text-sm">
-                For the best notification experience on iOS:
-              </p>
-              <ol className="list-decimal pl-5 space-y-1 text-sm">
-                <li>Tap the share button in your browser</li>
-                <li>Select "Add to Home Screen"</li>
-                <li>Open the app from your home screen</li>
-                <li>Enable notifications when prompted</li>
-              </ol>
+    if (isIOS) {
+      return (
+        <Alert className="mt-4 bg-blue-50">
+          <AlertTitle className="flex items-center">
+            <Smartphone className="mr-2 h-4 w-4" /> iOS Device Detected
+          </AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p className="text-sm">
+              <strong>Important:</strong> iOS requires installing this app to your home screen for notifications to work properly.
+            </p>
+            <ol className="list-decimal pl-5 space-y-1 text-sm">
+              <li>Tap the share button <span className="inline-block px-2 py-1 bg-gray-200 rounded">􀈂</span> at the bottom of your screen</li>
+              <li>Scroll down and select "Add to Home Screen" <span className="inline-block px-2 py-1 bg-gray-200 rounded">+</span></li>
+              <li>Tap "Add" in the top right corner</li>
+              <li>Open the app from your home screen</li>
+              <li>Enable notifications when prompted</li>
+            </ol>
+            <div className="flex flex-wrap gap-2 mt-2">
               <Button 
                 onClick={sharePage} 
+                variant="outline" 
+                size="sm"
+              >
+                <Share2 className="mr-1 h-4 w-4" /> Share This Page
+              </Button>
+              {isPWA ? (
+                <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+                  <CheckCircle className="mr-1 h-3 w-3" /> Installed as App
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+                  <AlertCircle className="mr-1 h-3 w-3" /> Not Installed Yet
+                </Badge>
+              )}
+            </div>
+          </AlertDescription>
+        </Alert>
+      );
+    } else if (isAndroid) {
+      return (
+        <Alert className="mt-4 bg-green-50">
+          <AlertTitle className="flex items-center">
+            <Smartphone className="mr-2 h-4 w-4" /> Android Device Detected
+          </AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p className="text-sm">
+              For reliable notifications on Android:
+            </p>
+            <ol className="list-decimal pl-5 space-y-1 text-sm">
+              <li>Click "Enable Notifications" to grant permissions</li>
+              <li>For best experience, install as an app when prompted</li>
+              <li>If not prompted, tap the menu icon (⋮) in Chrome</li>
+              <li>Select "Install app" or "Add to Home screen"</li>
+              <li>Keep the app running in the background</li>
+            </ol>
+            {!isPWA && (
+              <Button 
+                onClick={() => {
+                  toast({
+                    title: "Installation",
+                    description: "Look for 'Add to Home Screen' or 'Install app' in your browser menu.",
+                  });
+                }} 
                 variant="outline" 
                 size="sm" 
                 className="mt-2"
               >
-                <Share2 className="mr-1 h-4 w-4" /> Share This Page
+                <Download className="mr-1 h-4 w-4" /> Install App
               </Button>
-            </AlertDescription>
-          </Alert>
-        );
-      } else if (deviceInfo.os === 'android') {
-        return (
-          <Alert className="mt-4 bg-green-50">
-            <AlertTitle className="flex items-center">
-              <Smartphone className="mr-2 h-4 w-4" /> Android Device Detected
-            </AlertTitle>
-            <AlertDescription className="space-y-2">
-              <p className="text-sm">
-                For reliable notifications on Android:
-              </p>
-              <ol className="list-decimal pl-5 space-y-1 text-sm">
-                <li>Install this page as an app when prompted</li>
-                <li>Or add to home screen from browser menu</li>
-                <li>Keep the app running in the background</li>
-                <li>Disable battery optimization for the app in system settings</li>
-              </ol>
-              {!isPWA() && (
-                <Button 
-                  onClick={() => {
-                    toast({
-                      title: "Installation",
-                      description: "Look for 'Add to Home Screen' in your browser menu to install.",
-                    });
-                  }} 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-2"
-                >
-                  <Download className="mr-1 h-4 w-4" /> Install App
-                </Button>
-              )}
-            </AlertDescription>
-          </Alert>
-        );
-      }
+            )}
+          </AlertDescription>
+        </Alert>
+      );
+    } else if (deviceInfo.type === 'desktop') {
+      return (
+        <Alert className="mt-4 bg-gray-50">
+          <AlertTitle className="flex items-center">
+            <Monitor className="mr-2 h-4 w-4" /> Desktop Device Detected
+          </AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p className="text-sm">
+              For desktop notifications:
+            </p>
+            <ol className="list-decimal pl-5 space-y-1 text-sm">
+              <li>Click "Enable Notifications" to grant browser permission</li>
+              <li>Keep this tab open to receive alerts in real-time</li>
+              <li>Consider bookmarking this page for easy access</li>
+            </ol>
+          </AlertDescription>
+        </Alert>
+      );
     }
     
     return null;
+  };
+
+  // Get notification status message
+  const getNotificationStatusMessage = () => {
+    if (!supportsNotifications) {
+      return "Your browser doesn't support notifications";
+    }
+    
+    if (isIOS && !isPWA) {
+      return "Install from home screen for notifications";
+    }
+    
+    switch (notificationPermission) {
+      case 'granted':
+        return subscription ? 'Notifications are enabled' : 'Notifications permission granted but disabled';
+      case 'denied':
+        return 'Notifications are blocked in browser settings';
+      default:
+        return 'Notifications not yet enabled';
+    }
   };
 
   return (
@@ -405,12 +278,13 @@ const NotificationsPage = () => {
                   <div className="space-y-0.5">
                     <p className="text-sm font-medium text-white">Notification Status</p>
                     <p className="text-sm text-gray-400">
-                      {subscription ? 'Enabled' : 'Disabled'}
+                      {getNotificationStatusMessage()}
                     </p>
                   </div>
                   <Switch 
                     checked={subscription} 
                     onCheckedChange={toggleSubscription}
+                    disabled={isLoading || (!supportsNotifications) || (isIOS && !isPWA)}
                   />
                 </div>
                 
@@ -423,23 +297,37 @@ const NotificationsPage = () => {
                 
                 <Button 
                   onClick={toggleSubscription}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto mb-3"
                   variant={subscription ? "outline" : "default"}
+                  disabled={isLoading || (!supportsNotifications) || (isIOS && !isPWA)}
                 >
-                  {subscription ? 
-                    <><BellOff className="mr-2 h-4 w-4" /> Disable Notifications</> : 
+                  {isLoading ? (
+                    <>Processing...</>
+                  ) : subscription ? (
+                    <><BellOff className="mr-2 h-4 w-4" /> Disable Notifications</>
+                  ) : (
                     <><BellRing className="mr-2 h-4 w-4" /> Enable Notifications</>
-                  }
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={testConnection}
+                  className="w-full sm:w-auto sm:ml-2"
+                  variant="outline"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Testing..." : "Test Connection"}
                 </Button>
               </div>
               
-              {deviceInfo?.type === 'mobile' && getNotificationInstructions()}
+              {deviceInfo && getNotificationInstructions()}
               
               {deviceInfo && (
                 <div className="mt-6 p-3 rounded bg-[#2A2A2A] text-xs text-gray-400">
                   <p>Device: {deviceInfo.type} ({deviceInfo.os})</p>
                   <p>Browser: {deviceInfo.browser}</p>
-                  <p>Notifications supported: {deviceInfo.supportsNotifications ? 'Yes' : 'No'}</p>
+                  <p>Notifications supported: {supportsNotifications ? 'Yes' : 'No'}</p>
+                  {isPWA && <p><CheckCircle className="inline h-3 w-3 text-green-500 mr-1" /> Installed as app</p>}
                 </div>
               )}
             </CardContent>
@@ -585,7 +473,7 @@ const NotificationsPage = () => {
                 </h3>
                 <p className="mb-2">Mobile notifications work best when installed as an app:</p>
                 
-                <Tabs defaultValue="android" className="mt-4 border-gray-700">
+                <Tabs defaultValue={isIOS ? "ios" : "android"} className="mt-4 border-gray-700">
                   <TabsList className="bg-[#333] border-gray-700">
                     <TabsTrigger value="android" className="text-white data-[state=active]:bg-green-800 data-[state=active]:text-white">
                       Android
@@ -598,22 +486,45 @@ const NotificationsPage = () => {
                     <ol className="list-decimal pl-5 space-y-2">
                       <li>Open this page in Chrome</li>
                       <li>Tap the three-dot menu in the top-right</li>
-                      <li>Select "Add to Home screen"</li>
+                      <li>Select "Install app" or "Add to Home screen"</li>
                       <li>Open the app from your home screen</li>
                       <li>Enable notifications when prompted</li>
                       <li>For best results, disable battery optimization for this app</li>
                     </ol>
+                    <Button 
+                      onClick={testConnection} 
+                      variant="default" 
+                      className="mr-2 mt-4"
+                    >
+                      Test Connection
+                    </Button>
                   </TabsContent>
                   <TabsContent value="ios" className="pt-4">
                     <ol className="list-decimal pl-5 space-y-2">
                       <li>Open this page in Safari</li>
-                      <li>Tap the Share icon at the bottom of the screen</li>
-                      <li>Scroll down and tap "Add to Home Screen"</li>
+                      <li>Tap the Share icon <span className="inline-block px-2 py-1 bg-gray-700 rounded text-white">􀈂</span> at the bottom of the screen</li>
+                      <li>Scroll down and tap "Add to Home Screen" <span className="inline-block px-2 py-1 bg-gray-700 rounded text-white">+</span></li>
                       <li>Tap "Add" in the top-right corner</li>
                       <li>Open the app from your home screen</li>
                       <li>Enable notifications when prompted</li>
-                      <li>Note: iOS may limit background notifications</li>
+                      <li><strong>Note:</strong> iOS has limited support for web notifications</li>
                     </ol>
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <Button 
+                        onClick={sharePage} 
+                        variant="default" 
+                        className="mr-2"
+                      >
+                        <Share2 className="mr-1 h-4 w-4" /> Share This App
+                      </Button>
+                      <Button 
+                        onClick={testConnection} 
+                        variant="outline" 
+                        className="mr-2"
+                      >
+                        Test Connection
+                      </Button>
+                    </div>
                   </TabsContent>
                 </Tabs>
               </div>
@@ -629,14 +540,15 @@ const NotificationsPage = () => {
                   <li>Try refreshing the page or reinstalling as an app</li>
                   <li>Some mobile browsers have limited notification support</li>
                   <li>For mobile devices, installing as an app provides the most reliable experience</li>
+                  <li>Use the "Test Connection" button to verify your system can receive alerts</li>
                 </ul>
               </div>
               
               <div className="pt-4">
-                <Button onClick={refreshAlerts} variant="default" className="mr-2">
-                  Test Connection
+                <Button onClick={testConnection} variant="default" className="mr-2" disabled={isLoading}>
+                  {isLoading ? "Testing..." : "Test Connection"}
                 </Button>
-                {deviceInfo?.type === 'mobile' && (
+                {isMobile && (
                   <Button onClick={sharePage} variant="outline" className="ml-2">
                     <Share2 className="mr-2 h-4 w-4" /> Share This App
                   </Button>
