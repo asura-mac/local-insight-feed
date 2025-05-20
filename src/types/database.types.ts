@@ -55,6 +55,7 @@ export interface Database {
           state: string | null
           district: string | null
           phone_number: string | null
+          occupation: string | null
         }
         Insert: {
           id: string
@@ -65,6 +66,7 @@ export interface Database {
           state?: string | null
           district?: string | null
           phone_number?: string | null
+          occupation?: string | null
         }
         Update: {
           id?: string
@@ -75,6 +77,7 @@ export interface Database {
           state?: string | null
           district?: string | null
           phone_number?: string | null
+          occupation?: string | null
         }
       }
     }

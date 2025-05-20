@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -28,8 +29,11 @@ export default function AuthCallback() {
             throw userError;
           }
           
-          // If no user data or no location set, redirect to onboarding
-          if (!userData || !userData.location) {
+          // Check if this is a completely new user or missing required onboarding info
+          const needsOnboarding = !userData || (!userData.location || !userData.phone_number || !userData.occupation);
+          
+          if (needsOnboarding) {
+            // Redirect to onboarding for new users or those with incomplete profiles
             navigate('/onboarding');
           } else {
             // Otherwise, redirect to alerts

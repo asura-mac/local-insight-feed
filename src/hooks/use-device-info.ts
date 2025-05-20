@@ -7,6 +7,9 @@ export interface DeviceInfo {
   browser: string;
   supportsNotifications: boolean;
   isStandalone: boolean;
+  isiOS: boolean;
+  isiPad: boolean;
+  isAndroid: boolean;
 }
 
 export function useDeviceInfo() {
@@ -21,16 +24,22 @@ export function useDeviceInfo() {
       let browser = 'unknown';
       
       // Detect if mobile or tablet
-      if (/iPad|tablet|PlayBook|Android(?!.*Mobile)/i.test(ua)) {
+      const isIPad = /iPad|Macintosh/i.test(ua) && 'ontouchend' in document;
+      
+      if (isIPad || /tablet|PlayBook|Android(?!.*Mobile)/i.test(ua)) {
         deviceType = 'tablet';
       } else if (/Mobi|Android|iPhone|iPod/i.test(ua)) {
         deviceType = 'mobile';
       }
       
       // Detect OS
-      if (/iPhone|iPad|iPod/i.test(ua)) {
+      const isiOS = /iPhone|iPad|iPod/i.test(ua) || 
+                    (isIPad || (/Mac/.test(ua) && 'ontouchend' in document));
+      const isAndroid = /Android/i.test(ua);
+      
+      if (isiOS) {
         os = 'ios';
-      } else if (/Android/i.test(ua)) {
+      } else if (isAndroid) {
         os = 'android';
       } else if (/Win/i.test(ua)) {
         os = 'windows';
@@ -67,7 +76,10 @@ export function useDeviceInfo() {
         os,
         browser,
         supportsNotifications,
-        isStandalone
+        isStandalone,
+        isiOS: os === 'ios',
+        isiPad: isIPad,
+        isAndroid: os === 'android'
       });
       
       setLoading(false);

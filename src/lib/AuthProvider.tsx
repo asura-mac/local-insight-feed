@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, supabase } from './supabase';
 import { useNavigate } from 'react-router-dom';
@@ -23,17 +22,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener first
     const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
       
       if (event === 'SIGNED_IN' && session) {
         setUser(session.user);
         
-        // Defer data fetching to prevent potential deadlocks
         setTimeout(async () => {
           try {
-            // Check if user exists in our users table
             const { data: userData, error: userError } = await supabase
               .from('users')
               .select('*')
@@ -42,7 +38,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               
             if (userError) throw userError;
             
-            // If user doesn't exist in our database or has no location, redirect to onboarding
             if (!userData || !userData.location) {
               navigate('/onboarding');
             } else {
@@ -58,7 +53,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // Then check for active session
     const getSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -85,14 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      // Clean up existing auth state
       cleanupAuthState();
       
-      // Try global sign out first
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
-        // Continue even if this fails
       }
       
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -120,7 +111,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
-      // Clean up existing auth state
       cleanupAuthState();
       
       const { data, error } = await supabase.auth.signUp({ email, password });
@@ -155,13 +145,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      // Clean up existing auth state
       cleanupAuthState();
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            prompt: 'select_account'
+          }
         },
       });
       
@@ -188,14 +180,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Clean up auth state first
       cleanupAuthState();
       
-      // Try global sign out
       await supabase.auth.signOut({ scope: 'global' });
       setUser(null);
       
-      // Force page reload for a clean state
       window.location.href = '/login';
       
       return Promise.resolve();
