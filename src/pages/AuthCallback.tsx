@@ -1,15 +1,17 @@
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
-export default function AuthCallback() {
+const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        setIsLoading(true);
         // Get session from URL
         const { data, error } = await supabase.auth.getSession();
         
@@ -50,6 +52,8 @@ export default function AuthCallback() {
         setTimeout(() => {
           navigate('/login');
         }, 3000);
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -72,4 +76,6 @@ export default function AuthCallback() {
       )}
     </div>
   );
-}
+};
+
+export default AuthCallback;
