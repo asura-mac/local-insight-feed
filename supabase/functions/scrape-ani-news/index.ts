@@ -19,8 +19,8 @@ let lastFailureTime = 0;
 
 // URLs to try in order of preference
 const ANI_URLS = [
-  "https://aninews.in/news/national/",
-  "https://aninews.in/news/",
+  "https://aninews.in/category/national/",
+  "https://aninews.in/category/world/",
   "https://aninews.in/"
 ];
 
