@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.36.0";
 import { load } from "https://esm.sh/cheerio@1.0.0-rc.12";
-import { EMERGENCY_KEYWORDS, EXCLUSION_KEYWORDS } from "../scrape-ani-news/constants.ts";
+import { EMERGENCY_KEYWORDS, EXCLUSION_KEYWORDS } from "./constants.ts";
 
 // Type definition for emergency alert
 interface EmergencyAlert {
