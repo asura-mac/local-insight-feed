@@ -1,5 +1,5 @@
 
-name: Scrape ANI News Every 15 Minutes
+name: Run Emergency News Scrapers Every 15 Minutes
 
 on:
   schedule:
@@ -12,4 +12,5 @@ jobs:
     steps:
       - name: Call Supabase Edge Function
         run: |
-          curl -X POST https://pjqxfwvvrwhbwccarsob.functions.supabase.co/scrape-ani-news
+          curl -X POST https://pjqxfwvvrwhbwccarsob.functions.supabase.co/scrape-coordinator
+

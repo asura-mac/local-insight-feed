@@ -8,6 +8,7 @@ export interface EmergencyAlert {
   url: string;
   matched_keywords: string[];
   created_at: string;
+  source: string;
 }
 
 export function useEmergencyAlerts() {
