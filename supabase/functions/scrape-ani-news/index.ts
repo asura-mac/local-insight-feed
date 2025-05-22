@@ -24,6 +24,9 @@ const ANI_URLS = [
   "https://aninews.in/"
 ];
 
+// Base URL for completing relative URLs
+const ANI_BASE_URL = "https://aninews.in";
+
 // Get Supabase client using environment variables
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -64,6 +67,66 @@ const addRandomDelay = async () => {
   console.log(`Adding random delay of ${delay.toFixed(2)}ms`);
   await new Promise(resolve => setTimeout(resolve, delay));
 };
+
+// Function to clean up headline text
+function cleanHeadlineText(text: string): string {
+  if (!text) return '';
+  
+  // Decode HTML entities
+  const decodedText = text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+  
+  // Remove any remaining HTML tags
+  const noTagsText = decodedText.replace(/<\/?[^>]+(>|$)/g, '');
+  
+  // Trim and normalize whitespace
+  return noTagsText
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+// Function to resolve relative URLs
+function resolveUrl(url: string): string {
+  if (!url) return '';
+  
+  // Skip empty or javascript URLs
+  if (!url || url === '#' || url.startsWith('javascript:')) {
+    return '';
+  }
+  
+  // Already absolute URL
+  if (url.startsWith('http')) {
+    return url;
+  }
+  
+  // Relative URL - add base
+  return `${ANI_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
+// Function to validate a headline
+function isValidHeadline(title: string, url: string): boolean {
+  // Title checks
+  if (!title || title.length < 10 || title.length > 300) {
+    return false;
+  }
+  
+  // Skip common non-news links
+  const skipWords = ['about us', 'contact us', 'privacy policy', 'terms', 'read more', 'click here', 'view more'];
+  if (skipWords.some(word => title.toLowerCase().includes(word))) {
+    return false;
+  }
+  
+  // URL checks
+  if (!url || url === '#' || url.startsWith('javascript:')) {
+    return false;
+  }
+  
+  return true;
+}
 
 // Function to check if headline matches emergency keywords
 function matchesEmergencyKeywords(headline: string): string[] {
@@ -213,26 +276,156 @@ async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
   throw new Error(`Failed to fetch ${url} after ${maxRetries} attempts`);
 }
 
+// Multiple selector strategies for finding headlines
+function extractHeadlinesWithMultipleSelectors($: cheerio.CheerioAPI) {
+  const headlineCandidates: { title: string; url: string }[] = [];
+  const foundSelectors: Record<string, number> = {};
+  
+  // Strategy 1: All heading tags within aniBox
+  console.log("Trying Strategy 1: Headings in aniBox");
+  ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].forEach(headingTag => {
+    const headings = $(`div.aniBox ${headingTag} a`);
+    foundSelectors[`aniBox ${headingTag}`] = headings.length;
+    
+    headings.each((_, element) => {
+      const title = cleanHeadlineText($(element).text());
+      const url = resolveUrl($(element).attr('href') || '');
+      
+      if (isValidHeadline(title, url)) {
+        headlineCandidates.push({ title, url });
+      }
+    });
+  });
+  
+  // Strategy 2: Directly look for news article containers
+  console.log("Trying Strategy 2: Article containers");
+  const articleSelectors = [
+    '.news-item', 'article', '.article', '.story', '.post',
+    '[class*="news"]', '[class*="article"]', '[id*="news"]', '[id*="article"]'
+  ];
+  
+  articleSelectors.forEach(selector => {
+    const articles = $(selector);
+    foundSelectors[selector] = articles.length;
+    
+    articles.each((_, article) => {
+      // Try to find heading in this article container
+      const headingEl = $(article).find('h1, h2, h3, h4, h5, h6').first();
+      
+      // If heading has a link, extract from that
+      const linkEl = headingEl.find('a').first();
+      if (linkEl.length > 0) {
+        const title = cleanHeadlineText(linkEl.text());
+        const url = resolveUrl(linkEl.attr('href') || '');
+        
+        if (isValidHeadline(title, url)) {
+          headlineCandidates.push({ title, url });
+        }
+      } else if (headingEl.length > 0) {
+        // If heading doesn't have a link, try to find a standalone link
+        const title = cleanHeadlineText(headingEl.text());
+        const nearestLink = $(article).find('a').first();
+        const url = resolveUrl(nearestLink.attr('href') || '');
+        
+        if (isValidHeadline(title, url)) {
+          headlineCandidates.push({ title, url });
+        }
+      }
+    });
+  });
+  
+  // Strategy 3: Fallback to any headings with links
+  console.log("Trying Strategy 3: Any headings with links");
+  ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].forEach(headingTag => {
+    const headings = $(`${headingTag} a`);
+    foundSelectors[`any ${headingTag}`] = headings.length;
+    
+    headings.each((_, element) => {
+      const title = cleanHeadlineText($(element).text());
+      const url = resolveUrl($(element).attr('href') || '');
+      
+      if (isValidHeadline(title, url)) {
+        headlineCandidates.push({ title, url });
+      }
+    });
+  });
+  
+  // Strategy 4: Links with title attributes or heading-like classes
+  console.log("Trying Strategy 4: Links with title attributes");
+  const titleLinks = $('a[title], a.title, a.headline, a.heading');
+  foundSelectors['links with title'] = titleLinks.length;
+  
+  titleLinks.each((_, element) => {
+    const linkEl = $(element);
+    const title = cleanHeadlineText(linkEl.attr('title') || linkEl.text());
+    const url = resolveUrl(linkEl.attr('href') || '');
+    
+    if (isValidHeadline(title, url)) {
+      headlineCandidates.push({ title, url });
+    }
+  });
+  
+  // Log selector effectiveness
+  console.log("Selector effectiveness:");
+  for (const [selector, count] of Object.entries(foundSelectors)) {
+    console.log(`- ${selector}: ${count} elements found`);
+  }
+  
+  // Remove duplicates based on title
+  const uniqueHeadlines: { title: string; url: string }[] = [];
+  const uniqueTitles = new Set();
+  
+  headlineCandidates.forEach(candidate => {
+    if (!uniqueTitles.has(candidate.title)) {
+      uniqueTitles.add(candidate.title);
+      uniqueHeadlines.push(candidate);
+    }
+  });
+  
+  console.log(`Found ${uniqueHeadlines.length} unique headlines after filtering from ${headlineCandidates.length} candidates`);
+  
+  // Log a sample of found headlines for debugging
+  if (uniqueHeadlines.length > 0) {
+    console.log("Sample headlines:");
+    uniqueHeadlines.slice(0, 5).forEach(headline => {
+      console.log(`- "${headline.title}" (${headline.url})`);
+    });
+  }
+  
+  return uniqueHeadlines;
+}
+
 // Function to validate HTML content has expected structure
 function validateContent(html: string): boolean {
   const $ = load(html);
-  const newsBoxes = $('div.aniBox');
   
-  if (newsBoxes.length === 0) {
-    console.log("No news boxes found in HTML, content may be invalid or site structure changed");
-    console.log(`HTML length: ${html.length} characters`);
+  // Try multiple validation strategies
+  const strategies = [
+    { selector: 'div.aniBox', name: 'ANI Boxes' },
+    { selector: 'article, .news-item', name: 'News Articles' },
+    { selector: 'h1 a, h2 a, h3 a, h4 a, h5 a, h6 a', name: 'Heading Links' }
+  ];
+  
+  for (const strategy of strategies) {
+    const elements = $(strategy.selector);
+    console.log(`Validation: Found ${elements.length} ${strategy.name}`);
     
-    // Log a small sample of the HTML to help diagnose issues
-    if (html.length > 0) {
-      const sampleLength = Math.min(html.length, 500);
-      console.log(`HTML sample: ${html.substring(0, sampleLength)}...`);
+    if (elements.length > 0) {
+      console.log(`Content validated using ${strategy.name}`);
+      return true;
     }
-    
-    return false;
   }
   
-  console.log(`Found ${newsBoxes.length} news boxes in HTML content`);
-  return true;
+  console.log("No news content structures found in HTML");
+  console.log(`HTML length: ${html.length} characters`);
+  
+  // Log a small sample of the HTML to help diagnose issues
+  if (html.length > 0) {
+    const sampleLength = Math.min(html.length, 500);
+    console.log(`HTML sample: ${html.substring(0, sampleLength)}...`);
+  }
+  
+  return false;
 }
 
 // Check circuit breaker status and reset if needed
@@ -322,31 +515,21 @@ async function scrapeANI() {
     
     const $ = load(html);
     
-    // Extract headlines
-    const headlines: EmergencyAlert[] = [];
+    // Extract headlines using multiple strategies
+    const extractedHeadlines = extractHeadlinesWithMultipleSelectors($);
     
-    // Target the main news container
-    $('div.aniBox').each((_, element) => {
-      const headlineElement = $(element).find('h6 a');
-      const title = headlineElement.text().trim();
-      const url = headlineElement.attr('href') || "";
-      
-      if (title && url) {
+    // Filter headlines for emergency terms
+    const emergencyHeadlines: EmergencyAlert[] = extractedHeadlines
+      .map(({ title, url }) => {
         const matchedKeywords = matchesEmergencyKeywords(title);
-        if (matchedKeywords.length > 0) {
-          headlines.push({
-            title,
-            url,
-            matched_keywords: matchedKeywords
-          });
-        }
-      }
-    });
+        return matchedKeywords.length > 0 ? { title, url, matched_keywords: matchedKeywords } : null;
+      })
+      .filter((headline): headline is EmergencyAlert => headline !== null);
     
-    console.log(`Found ${headlines.length} emergency headlines`);
+    console.log(`Found ${emergencyHeadlines.length} emergency headlines out of ${extractedHeadlines.length} total headlines`);
     
     // Store alerts in Supabase
-    await storeAlerts(headlines);
+    await storeAlerts(emergencyHeadlines);
     
     // Clean up old alerts
     await cleanupOldAlerts();
@@ -356,9 +539,9 @@ async function scrapeANI() {
     
     return {
       status: "success",
-      message: `Processed ${headlines.length} emergency headlines`,
+      message: `Processed ${emergencyHeadlines.length} emergency headlines`,
       source_url: currentUrl,
-      headlines
+      headlines: emergencyHeadlines
     };
   } catch (error) {
     console.error("Error scraping ANI news:", error);
