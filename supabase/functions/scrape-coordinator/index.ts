@@ -105,6 +105,12 @@ Deno.serve(async (req) => {
     // Call India Today scraper
     results.push(await callScraper('scrape-india-today'));
     
+    // Add delay before next scraper
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
+    // Call MoneyControl scraper
+    results.push(await callScraper('scrape-moneycontrol'));
+    
     // Clean up old alerts
     await cleanupOldAlerts();
     

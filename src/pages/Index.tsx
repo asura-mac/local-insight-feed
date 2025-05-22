@@ -38,7 +38,7 @@ export default function Index() {
   const lastUpdate = alerts && alerts.length > 0 
     ? new Date(alerts[0].created_at).toLocaleString() 
     : "Updating...";
-  const newsSources = 3; // ANI, Economic Times, India Today
+  const newsSources = 4; // ANI, Economic Times, India Today, MoneyControl
   const uptime = "99.9%";
 
   return (
@@ -83,7 +83,7 @@ export default function Index() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2 text-center">Continuous Monitoring</h3>
                 <p className="text-gray-600">
-                  Our system scans ANI News, Economic Times, and India Today every 15 minutes, 
+                  Our system scans ANI News, Economic Times, India Today, and MoneyControl every 15 minutes, 
                   ensuring you never miss critical emergency information.
                 </p>
               </div>
@@ -164,6 +164,14 @@ export default function Index() {
                 
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">India Today Scraper</span>
+                  <div className="flex items-center">
+                    <CheckCircle className="text-green-500 mr-1" size={16} />
+                    <span className="text-green-500 text-sm font-medium">Operational</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">MoneyControl Scraper</span>
                   <div className="flex items-center">
                     <CheckCircle className="text-green-500 mr-1" size={16} />
                     <span className="text-green-500 text-sm font-medium">Operational</span>
