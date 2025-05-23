@@ -43,8 +43,26 @@ export function EmergencyAlertCard({ alert }: { alert: EmergencyAlert }) {
     return (now.getTime() - alertTime.getTime()) < 30 * 60 * 1000; // 30 minutes
   };
 
+  // Get severity color based on severity or freshness
+  const getSeverityColor = () => {
+    if (alert.severity === 'high') return 'border-l-red-500 bg-red-900/10';
+    if (alert.severity === 'low') return 'border-l-yellow-600 bg-[#222]';
+    return isFresh() ? 'border-l-red-500 bg-red-900/10' : 'border-l-yellow-600 bg-[#222]';
+  }
+
+  // Get source badge color
+  const getSourceBadgeColor = () => {
+    switch(alert.source?.toLowerCase()) {
+      case 'ani news': return 'bg-blue-900/30 text-blue-300 border-blue-700/50';
+      case 'economic times': return 'bg-green-900/30 text-green-300 border-green-700/50';
+      case 'india today': return 'bg-purple-900/30 text-purple-300 border-purple-700/50';
+      case 'moneycontrol': return 'bg-orange-900/30 text-orange-300 border-orange-700/50';
+      default: return 'bg-gray-900/30 text-gray-300 border-gray-700/50';
+    }
+  }
+
   return (
-    <Card className={`mb-4 border-l-4 ${isFresh() ? 'border-l-red-500 bg-red-900/10' : 'border-l-yellow-600 bg-[#222]'}`}>
+    <Card className={`mb-4 border-l-4 ${getSeverityColor()}`}>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-start gap-2">
           <AlertTriangle className={`h-5 w-5 ${isFresh() ? 'text-red-500' : 'text-yellow-500'} flex-shrink-0`} />
@@ -54,19 +72,24 @@ export function EmergencyAlertCard({ alert }: { alert: EmergencyAlert }) {
             rel="noopener noreferrer"
             className="hover:underline text-gray-100 group flex items-start"
           >
-            {alert.title}
+            {alert.headline}
             <ExternalLink className="h-4 w-4 ml-1 opacity-0 group-hover:opacity-70 text-gray-400" />
           </a>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mb-2">
           {alert.matched_keywords.map((keyword, index) => (
             <Badge key={index} variant="outline" className={isFresh() ? "bg-red-900/30 text-red-300 border-red-700/50" : "bg-yellow-900/20 text-yellow-200 border-yellow-700/30"}>
               {keyword}
             </Badge>
           ))}
-          <span className="text-xs text-muted-foreground ml-auto flex items-center">
+        </div>
+        <div className="flex justify-between items-center">
+          <Badge className={getSourceBadgeColor()}>
+            {alert.source}
+          </Badge>
+          <span className="text-xs text-muted-foreground flex items-center">
             <Clock className="h-3 w-3 mr-1" /> {timeElapsed}
           </span>
         </div>
@@ -210,7 +233,7 @@ export function EmergencyAlertsSection() {
         <Badge className="ml-2 bg-red-500">LIVE</Badge>
       </div>
       <p className="text-gray-400">
-        Real-time emergency alerts from ANI News, updated every 15 minutes
+        Real-time emergency alerts from multiple sources, updated every 15 minutes
       </p>
       <EmergencyAlertsList />
     </div>

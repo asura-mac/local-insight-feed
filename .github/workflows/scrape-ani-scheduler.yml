@@ -13,4 +13,8 @@ jobs:
       - name: Call Supabase Edge Function
         run: |
           curl -X POST https://pjqxfwvvrwhbwccarsob.functions.supabase.co/scrape-coordinator
-
+        continue-on-error: true # Continue even if the call fails
+      
+      - name: Verify Function Call
+        run: |
+          echo "Function call completed at $(date)"

@@ -44,24 +44,36 @@ export type Database = {
       }
       emergency_alerts: {
         Row: {
+          alert_type: string | null
           created_at: string
+          headline: string
           id: string
           matched_keywords: string[]
-          title: string
+          published_at: string | null
+          severity: string | null
+          source: string
           url: string
         }
         Insert: {
+          alert_type?: string | null
           created_at?: string
+          headline: string
           id?: string
           matched_keywords: string[]
-          title: string
+          published_at?: string | null
+          severity?: string | null
+          source?: string
           url: string
         }
         Update: {
+          alert_type?: string | null
           created_at?: string
+          headline?: string
           id?: string
           matched_keywords?: string[]
-          title?: string
+          published_at?: string | null
+          severity?: string | null
+          source?: string
           url?: string
         }
         Relationships: []

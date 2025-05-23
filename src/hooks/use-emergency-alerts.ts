@@ -4,11 +4,14 @@ import { supabase } from "@/lib/supabase";
 
 export interface EmergencyAlert {
   id: string;
-  title: string;
+  headline: string;
   url: string;
   matched_keywords: string[];
   created_at: string;
   source: string;
+  alert_type?: string;
+  severity?: string;
+  published_at?: string;
 }
 
 export function useEmergencyAlerts() {
