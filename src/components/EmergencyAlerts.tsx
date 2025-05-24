@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useEmergencyAlerts, EmergencyAlert } from "@/hooks/use-emergency-alerts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,13 +77,6 @@ export function EmergencyAlertCard({ alert }: { alert: EmergencyAlert }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="flex flex-wrap gap-2 mb-2">
-          {alert.matched_keywords.map((keyword, index) => (
-            <Badge key={index} variant="outline" className={isFresh() ? "bg-red-900/30 text-red-300 border-red-700/50" : "bg-yellow-900/20 text-yellow-200 border-yellow-700/30"}>
-              {keyword}
-            </Badge>
-          ))}
-        </div>
         <div className="flex justify-between items-center">
           <Badge className={getSourceBadgeColor()}>
             {alert.source}

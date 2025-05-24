@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -6,6 +5,17 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
+
+export interface EmergencyAlert {
+  id: string
+  headline: string
+  source: string
+  url: string
+  published_at: string | null
+  created_at: string
+  alert_type: string | null
+  severity: string | null
+}
 
 export interface Database {
   public: {

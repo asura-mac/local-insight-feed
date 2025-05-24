@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useEmergencyAlerts } from "@/hooks/use-emergency-alerts";
 import { EmergencyAlertCard } from "@/components/EmergencyAlerts";
@@ -71,6 +70,17 @@ const NotificationsPage = () => {
     const latestAlert = alerts[0];
     return getTimeElapsed(latestAlert.created_at);
   }, [alerts]);
+
+  // Get source badge color based on source name
+  const getSourceBadgeColor = (source: string) => {
+    switch(source?.toLowerCase()) {
+      case 'ani news': return 'bg-blue-900 text-blue-300 border-blue-700';
+      case 'economic times': return 'bg-green-900 text-green-300 border-green-700';
+      case 'india today': return 'bg-purple-900 text-purple-300 border-purple-700';
+      case 'moneycontrol': return 'bg-orange-900 text-orange-300 border-orange-700';
+      default: return 'bg-gray-900 text-gray-300 border-gray-700';
+    }
+  };
 
   // Share page functionality for mobile users
   const sharePage = async () => {
@@ -371,7 +381,7 @@ const NotificationsPage = () => {
                     <TableHeader>
                       <TableRow className="border-gray-700">
                         <TableHead className="text-gray-300">Alert</TableHead>
-                        <TableHead className="text-gray-300">Keywords</TableHead>
+                        <TableHead className="text-gray-300">Source</TableHead>
                         <TableHead className="text-gray-300">Time</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -385,22 +395,13 @@ const NotificationsPage = () => {
                               rel="noopener noreferrer"
                               className="hover:underline text-blue-400"
                             >
-                              {alert.title}
+                              {alert.headline}
                             </a>
                           </TableCell>
                           <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {alert.matched_keywords.slice(0, 3).map((keyword, idx) => (
-                                <span key={idx} className="text-xs bg-red-900/30 text-red-300 px-2 py-1 rounded">
-                                  {keyword}
-                                </span>
-                              ))}
-                              {alert.matched_keywords.length > 3 && (
-                                <span className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-300">
-                                  +{alert.matched_keywords.length - 3} more
-                                </span>
-                              )}
-                            </div>
+                            <Badge variant="outline" className={`bg-opacity-30 text-opacity-90 ${getSourceBadgeColor(alert.source)}`}>
+                              {alert.source}
+                            </Badge>
                           </TableCell>
                           <TableCell className="text-gray-400">
                             {getTimeElapsed(alert.created_at)}

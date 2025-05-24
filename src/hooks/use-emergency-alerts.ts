@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -6,7 +5,6 @@ export interface EmergencyAlert {
   id: string;
   headline: string;
   url: string;
-  matched_keywords: string[];
   created_at: string;
   source: string;
   alert_type?: string;
@@ -31,7 +29,7 @@ export function useEmergencyAlerts() {
       
       const { data, error } = await supabase
         .from('emergency_alerts')
-        .select('*')
+        .select('id, headline, url, created_at, source, alert_type, severity, published_at')
         .gte('created_at', cutoffTime)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -66,8 +64,10 @@ export function useEmergencyAlerts() {
           table: 'emergency_alerts'
         },
         (payload) => {
-          // Add new alert to the top of the list
-          setAlerts(currentAlerts => [payload.new as EmergencyAlert, ...currentAlerts]);
+          const newAlert = payload.new as EmergencyAlert;
+          // Add new alert to the top of the list, excluding matched_keywords
+          const { matched_keywords, ...alertWithoutKeywords } = newAlert;
+          setAlerts(currentAlerts => [alertWithoutKeywords, ...currentAlerts]);
         }
       )
       .on(

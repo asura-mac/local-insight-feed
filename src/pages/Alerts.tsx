@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -185,7 +184,7 @@ export default function Alerts() {
                 <Card key={alert.id} className="overflow-hidden border-gray-800 bg-[#222]">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
-                      <CardTitle className="text-white">{alert.title}</CardTitle>
+                      <CardTitle className="text-white">{alert.headline}</CardTitle>
                       <div className="text-sm bg-[#D32F2F]/10 text-[#D32F2F] font-medium px-3 py-1 rounded-full">
                         {alert.district || alert.state || alert.country}
                       </div>
