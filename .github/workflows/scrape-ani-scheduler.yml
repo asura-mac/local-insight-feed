@@ -3,7 +3,7 @@ name: Run Emergency News Scrapers Every 15 Minutes
 
 on:
   schedule:
-    - cron: "*/15 * * * *" # Every 15 minutes (UTC)
+    - cron: "0 */2 * * *" # Every 2 hours (UTC)
   workflow_dispatch:
 
 jobs:
