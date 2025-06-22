@@ -1,14 +1,20 @@
-
 import { RegisterForm } from "@/components/auth/RegisterForm";
+import { Layout } from "@/components/layout/Layout";
 
 export default function Register() {
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center py-12 px-4 bg-[#1A1A1A]">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-[#D32F2F]">Alert Hub</h1>
-        <p className="mt-2 text-gray-400">Create your account to get started</p>
+    <Layout>
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+          <div className="w-full max-w-md">
+            <div className="mb-8 text-center">
+              <h1 className="text-3xl font-bold text-dark-text-primary mb-2">Create Account</h1>
+              <p className="text-dark-text-secondary">Join Satark to stay informed about emergencies</p>
+            </div>
+            <RegisterForm />
+          </div>
+        </div>
       </div>
-      <RegisterForm />
-    </div>
+    </Layout>
   );
 }

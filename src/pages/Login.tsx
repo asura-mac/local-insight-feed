@@ -1,14 +1,20 @@
-
 import { LoginForm } from "@/components/auth/LoginForm";
+import { Layout } from "@/components/layout/Layout";
 
 export default function Login() {
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center py-12 px-4 bg-[#1A1A1A]">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-[#D32F2F]">Alert Hub</h1>
-        <p className="mt-2 text-gray-400">Sign in to access your alerts</p>
+    <Layout>
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+          <div className="w-full max-w-md">
+            <div className="mb-8 text-center">
+              <h1 className="text-3xl font-bold text-dark-text-primary mb-2">Welcome Back</h1>
+              <p className="text-dark-text-secondary">Sign in to your Satark account</p>
+            </div>
+            <LoginForm />
+          </div>
+        </div>
       </div>
-      <LoginForm />
-    </div>
+    </Layout>
   );
 }

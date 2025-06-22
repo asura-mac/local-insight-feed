@@ -1,12 +1,14 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle, AlertCircle } from "lucide-react";
 import { ManualLocationEntry } from "@/components/onboarding/ManualLocationEntry";
 import { Tables } from "@/types/database.types";
 import { getCurrentPosition, reverseGeocode } from "@/lib/locationUtils";
@@ -21,7 +23,8 @@ export default function Profile() {
   const [showLocationUpdate, setShowLocationUpdate] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [phoneError, setPhoneError] = useState<string | null>(null);
-  
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return;
@@ -255,58 +258,102 @@ export default function Profile() {
     }
   };
 
-  return (
-    <AppLayout>
-      <div className="max-w-3xl mx-auto px-4">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-white">Profile Settings</h1>
-        </div>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
 
-        {loading ? (
-          <Card className="border-gray-800 bg-[#222]">
-            <CardContent className="p-6">
-              <div className="space-y-2">
-                <div className="w-full h-8 bg-gray-700 animate-pulse rounded"></div>
-                <div className="w-2/3 h-8 bg-gray-700 animate-pulse rounded"></div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card className="border-gray-800 bg-[#222]">
-                <CardHeader>
-                  <CardTitle className="text-white">Account Information</CardTitle>
-                  <CardDescription className="text-gray-400">Your basic account details</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({
+          full_name: userData?.full_name || '',
+          phone_number: phoneNumber,
+          location: userData?.location || '',
+          country: userData?.country || '',
+          state: userData?.state || '',
+          district: userData?.district || '',
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      setMessage({ type: "success", text: "Profile updated successfully!" });
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      setMessage({ type: "error", text: "Failed to update profile" });
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Layout>
+      <div className="container mx-auto px-4 py-6">
+        <div className="max-w-3xl mx-auto px-4">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold text-dark-text-primary">Profile Settings</h1>
+          </div>
+
+          {message && (
+            <Alert className={`mb-6 ${message.type === "success" ? "bg-green-900/20 border-green-700" : "bg-red-900/20 border-red-700"}`}>
+              {message.type === "success" ? (
+                <CheckCircle className="h-4 w-4 text-green-400" />
+              ) : (
+                <AlertCircle className="h-4 w-4 text-red-400" />
+              )}
+              <AlertDescription className={message.type === "success" ? "text-green-300" : "text-red-300"}>
+                {message.text}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <Card className="border-dark-border bg-dark-surface">
+            <CardHeader>
+              <CardTitle className="text-dark-text-primary">Personal Information</CardTitle>
+              <CardDescription className="text-dark-text-secondary">
+                Update your profile information and location preferences
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">Email</label>
-                    <Input 
-                      value={user?.email || ''} 
-                      disabled 
-                      className="bg-[#333] text-white border-gray-700"
+                    <Label htmlFor="full_name" className="text-dark-text-primary">Full Name</Label>
+                    <Input
+                      id="full_name"
+                      type="text"
+                      value={userData?.full_name || ''}
+                      onChange={(e) => setUserData(prev => prev ? { ...prev, full_name: e.target.value } : null)}
+                      className="bg-dark-surface-light border-dark-border text-dark-text-primary placeholder-dark-text-muted focus:border-dark-accent"
+                      placeholder="Enter your full name"
                     />
                   </div>
-                </CardContent>
-              </Card>
 
-              <Card className="border-gray-800 bg-[#222]">
-                <CardHeader>
-                  <CardTitle className="text-white">Contact Information</CardTitle>
-                  <CardDescription className="text-gray-400">Update your contact details</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">Phone Number</label>
-                    <Input 
-                      value={phoneNumber} 
+                    <Label htmlFor="phone" className="text-dark-text-primary">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phoneNumber}
                       onChange={(e) => {
                         setPhoneNumber(e.target.value);
                         setPhoneError(null);
                       }}
+                      className="bg-dark-surface-light border-dark-border text-dark-text-primary placeholder-dark-text-muted focus:border-dark-accent"
                       placeholder="Enter your phone number"
-                      className="bg-[#333] text-white border-gray-700" 
                     />
                     {phoneError && (
                       <p className="text-xs text-[#F44336] mt-1">{phoneError}</p>
@@ -315,67 +362,109 @@ export default function Profile() {
                       Format: 10-digit Indian mobile number (e.g., 9876543210)
                     </p>
                   </div>
-                  <Button 
-                    onClick={handlePhoneUpdate}
-                    className="bg-[#D32F2F] hover:bg-[#B71C1C] text-white"
-                  >
-                    Update Phone
-                  </Button>
-                </CardContent>
-              </Card>
 
-              <Card className="md:col-span-2 border-gray-800 bg-[#222]">
-                <CardHeader>
-                  <CardTitle className="text-white">Location</CardTitle>
-                  <CardDescription className="text-gray-400">Your current location for alerts</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {showLocationUpdate ? (
-                    <ManualLocationEntry 
-                      onLocationSelected={handleLocationUpdate}
-                      initialCountry={userData?.country || "India"}
-                      initialState={userData?.state || ""}
-                      initialDistrict={userData?.district || ""}
+                  <div className="space-y-2">
+                    <Label htmlFor="country" className="text-dark-text-primary">Country</Label>
+                    <Input
+                      id="country"
+                      type="text"
+                      value={userData?.country || ''}
+                      onChange={(e) => setUserData(prev => prev ? { ...prev, country: e.target.value } : null)}
+                      className="bg-dark-surface-light border-dark-border text-dark-text-primary placeholder-dark-text-muted focus:border-dark-accent"
+                      placeholder="Enter your country"
                     />
-                  ) : (
-                    <div className="space-y-4">
-                      <p className="text-gray-300">
-                        <strong>Current Location:</strong> {userData?.location || "No location set"}
-                      </p>
-                      <div className="flex flex-wrap gap-3">
-                        <Button 
-                          onClick={() => setShowLocationUpdate(true)}
-                          className="bg-[#D32F2F] hover:bg-[#B71C1C] text-white"
-                        >
-                          Update Location Manually
-                        </Button>
-                        <Button 
-                          onClick={detectLocation}
-                          variant="outline"
-                          disabled={detectingLocation}
-                          className="border-gray-700 text-white hover:bg-[#333] hover:text-white flex items-center"
-                        >
-                          {detectingLocation ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Detecting...
-                            </>
-                          ) : (
-                            <>
-                              <MapPin className="h-4 w-4 mr-2" />
-                              Autodetect My Location
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </>
-        )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="state" className="text-dark-text-primary">State/Province</Label>
+                    <Input
+                      id="state"
+                      type="text"
+                      value={userData?.state || ''}
+                      onChange={(e) => setUserData(prev => prev ? { ...prev, state: e.target.value } : null)}
+                      className="bg-dark-surface-light border-dark-border text-dark-text-primary placeholder-dark-text-muted focus:border-dark-accent"
+                      placeholder="Enter your state or province"
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="district" className="text-dark-text-primary">District/City</Label>
+                    <Input
+                      id="district"
+                      type="text"
+                      value={userData?.district || ''}
+                      onChange={(e) => setUserData(prev => prev ? { ...prev, district: e.target.value } : null)}
+                      className="bg-dark-surface-light border-dark-border text-dark-text-primary placeholder-dark-text-muted focus:border-dark-accent"
+                      placeholder="Enter your district or city"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-dark-accent hover:bg-dark-accent-hover text-white"
+                  >
+                    {loading ? "Updating..." : "Update Profile"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card className="border-dark-border bg-dark-surface mt-6">
+            <CardHeader>
+              <CardTitle className="text-dark-text-primary">Location</CardTitle>
+              <CardDescription className="text-dark-text-secondary">
+                Your current location for alerts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {showLocationUpdate ? (
+                <ManualLocationEntry 
+                  onLocationSelected={handleLocationUpdate}
+                  initialCountry={userData?.country || "India"}
+                  initialState={userData?.state || ""}
+                  initialDistrict={userData?.district || ""}
+                />
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-dark-text-primary">
+                    <strong>Current Location:</strong> {userData?.location || "No location set"}
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <Button 
+                      onClick={() => setShowLocationUpdate(true)}
+                      className="bg-dark-accent hover:bg-dark-accent-hover text-white"
+                    >
+                      Update Location Manually
+                    </Button>
+                    <Button 
+                      onClick={detectLocation}
+                      variant="outline"
+                      disabled={detectingLocation}
+                      className="border-dark-border text-dark-text-primary hover:bg-dark-accent hover:text-white flex items-center"
+                    >
+                      {detectingLocation ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Detecting...
+                        </>
+                      ) : (
+                        <>
+                          <MapPin className="h-4 w-4 mr-2" />
+                          Autodetect My Location
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </AppLayout>
+    </Layout>
   );
 }

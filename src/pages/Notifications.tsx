@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useEmergencyAlerts } from "@/hooks/use-emergency-alerts";
 import { EmergencyAlertCard } from "@/components/EmergencyAlerts";
 import { useToast } from "@/hooks/use-toast";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -235,331 +235,332 @@ const NotificationsPage = () => {
   };
 
   return (
-    <AppLayout>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 text-white">Emergency Alert System</h1>
-          <p className="text-muted-foreground text-gray-300">
-            Stay informed about emergencies with real-time notifications
-          </p>
-          
-          <TabsList className="mt-4 bg-[#333] border-gray-700">
-            <TabsTrigger value="notifications" className="text-white data-[state=active]:bg-[#D32F2F] data-[state=active]:text-white">
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="alerts" className="text-white data-[state=active]:bg-[#D32F2F] data-[state=active]:text-white">
-              Live Alerts
-            </TabsTrigger>
-            <TabsTrigger value="setup" className="text-white data-[state=active]:bg-[#D32F2F] data-[state=active]:text-white">
-              Setup Guide
-            </TabsTrigger>
-          </TabsList>
+    <Layout>
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
         </div>
         
-        <TabsContent value="notifications" className="space-y-4">
-          {/* Notification Permission Card */}
-          <Card className="border-gray-800 bg-[#222]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                {subscription ? 
-                  <BellRing className="h-5 w-5 text-green-500" /> : 
-                  <BellOff className="h-5 w-5 text-gray-500" />
-                }
-                Emergency Notifications
-              </CardTitle>
-              <CardDescription className="text-gray-300">
-                Receive instant alerts when emergencies are detected
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4">
-                <Alert className="bg-[#333] border-gray-700 text-gray-200">
-                  <Info className="h-4 w-4 text-blue-400" />
-                  <AlertTitle className="text-gray-100">How it works</AlertTitle>
-                  <AlertDescription className="text-gray-300">
-                    We continuously monitor news sources for emergency keywords. When an alert is detected, 
-                    you'll receive an instant notification even when this tab is not active.
-                  </AlertDescription>
-                </Alert>
-              </div>
-              
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-medium text-white">Notification Status</p>
-                    <p className="text-sm text-gray-400">
-                      {getNotificationStatusMessage()}
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={subscription} 
-                    onCheckedChange={toggleSubscription}
-                    disabled={isLoading || (!supportsNotifications) || (isIOS && !isPWA)}
-                  />
-                </div>
-                
-                <p className="text-sm mb-2 text-gray-300">
-                  <strong className="text-white">Notification permission:</strong> <span className="text-gray-300">{notificationPermission}</span>
-                </p>
-                <p className="text-sm mb-4 text-gray-300">
-                  <strong className="text-white">Latest alert:</strong> <span className="text-gray-300">{getLatestAlertTime()}</span>
-                </p>
-                
-                <Button 
-                  onClick={toggleSubscription}
-                  className="w-full sm:w-auto mb-3"
-                  variant={subscription ? "outline" : "default"}
-                  disabled={isLoading || (!supportsNotifications) || (isIOS && !isPWA)}
-                >
-                  {isLoading ? (
-                    <>Processing...</>
-                  ) : subscription ? (
-                    <><BellOff className="mr-2 h-4 w-4" /> Disable Notifications</>
-                  ) : (
-                    <><BellRing className="mr-2 h-4 w-4" /> Enable Notifications</>
-                  )}
-                </Button>
-                
-                <Button
-                  onClick={testConnection}
-                  className="w-full sm:w-auto sm:ml-2"
-                  variant="outline"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Testing..." : "Test Connection"}
-                </Button>
-              </div>
-              
-              {deviceInfo && getNotificationInstructions()}
-              
-              {deviceInfo && (
-                <div className="mt-6 p-3 rounded bg-[#2A2A2A] text-xs text-gray-400">
-                  <p>Device: {deviceInfo.type} ({deviceInfo.os})</p>
-                  <p>Browser: {deviceInfo.browser}</p>
-                  <p>Notifications supported: {supportsNotifications ? 'Yes' : 'No'}</p>
-                  {isPWA && <p><CheckCircle className="inline h-3 w-3 text-green-500 mr-1" /> Installed as app</p>}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="alerts" className="space-y-4">
-          {/* Recent alerts table */}
-          <Card className="border-gray-800 bg-[#222]">
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="text-white">Live Emergency Alerts</CardTitle>
-                  <CardDescription className="text-gray-300">
-                    Showing the most recent emergency alerts detected
-                  </CardDescription>
-                </div>
-                <Badge variant="outline" className="bg-[#D32F2F]/10 text-[#FF5252] border-[#D32F2F]/20">
-                  LIVE
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-center py-4 text-gray-400">Loading alerts...</div>
-              ) : error ? (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertTitle>Error loading alerts</AlertTitle>
-                  <AlertDescription>{error}</AlertDescription>
-                  <Button variant="outline" onClick={refreshAlerts} className="mt-2">
-                    Try Again
-                  </Button>
-                </Alert>
-              ) : alerts.length === 0 ? (
-                <div className="text-center text-gray-400 py-8">
-                  No emergency alerts detected yet.
-                </div>
-              ) : (
-                <div className="overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-gray-700">
-                        <TableHead className="text-gray-300">Alert</TableHead>
-                        <TableHead className="text-gray-300">Source</TableHead>
-                        <TableHead className="text-gray-300">Time</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {alerts.map((alert) => (
-                        <TableRow key={alert.id} className="border-gray-700">
-                          <TableCell className="font-medium">
-                            <a 
-                              href={alert.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="hover:underline text-blue-400"
-                            >
-                              {alert.headline}
-                            </a>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={`bg-opacity-30 text-opacity-90 ${getSourceBadgeColor(alert.source)}`}>
-                              {alert.source}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-gray-400">
-                            {getTimeElapsed(alert.created_at)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-              
-              <div className="mt-4 text-right">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={refreshAlerts}
-                  className="text-gray-300 border-gray-700"
-                >
-                  Refresh Alerts
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Detailed view of recent alerts */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold mb-4 text-white">Detailed Alerts</h2>
-            <div className="space-y-4">
-              {loading ? (
-                <div className="text-center py-4 text-gray-400">Loading alerts...</div>
-              ) : alerts.length > 0 ? (
-                alerts.slice(0, 5).map((alert) => (
-                  <EmergencyAlertCard key={alert.id} alert={alert} />
-                ))
-              ) : (
-                <div className="text-center text-gray-400 py-4">
-                  No emergency alerts to display.
-                </div>
-              )}
-            </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="mb-8">
+            <TabsList className="mt-4 bg-[#333] border-gray-700">
+              <TabsTrigger value="notifications" className="text-white data-[state=active]:bg-[#D32F2F] data-[state=active]:text-white">
+                Notifications
+              </TabsTrigger>
+              <TabsTrigger value="alerts" className="text-white data-[state=active]:bg-[#D32F2F] data-[state=active]:text-white">
+                Live Alerts
+              </TabsTrigger>
+              <TabsTrigger value="setup" className="text-white data-[state=active]:bg-[#D32F2F] data-[state=active]:text-white">
+                Setup Guide
+              </TabsTrigger>
+            </TabsList>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="setup" className="space-y-4">
-          <Card className="border-gray-800 bg-[#222]">
-            <CardHeader>
-              <CardTitle className="text-white">Setup Guide</CardTitle>
-              <CardDescription className="text-gray-300">
-                Follow these steps to ensure you receive emergency alerts
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 text-gray-300">
-              <div>
-                <h3 className="text-lg font-medium text-white flex items-center mb-2">
-                  <Monitor className="mr-2 h-5 w-5 text-blue-400" /> 
-                  Desktop Setup
-                </h3>
-                <ol className="list-decimal pl-5 space-y-2">
-                  <li>Click "Enable Notifications" button in the Notifications tab</li>
-                  <li>Allow notifications when your browser prompts you</li>
-                  <li>Keep this website bookmarked for easy access</li>
-                  <li>You'll receive notifications even when this tab is not active</li>
-                </ol>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-white flex items-center mb-2">
-                  <Smartphone className="mr-2 h-5 w-5 text-green-400" /> 
-                  Mobile Setup
-                </h3>
-                <p className="mb-2">Mobile notifications work best when installed as an app:</p>
+          
+          <TabsContent value="notifications" className="space-y-4">
+            {/* Notification Permission Card */}
+            <Card className="border-gray-800 bg-[#222]">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  {subscription ? 
+                    <BellRing className="h-5 w-5 text-green-500" /> : 
+                    <BellOff className="h-5 w-5 text-gray-500" />
+                  }
+                  Emergency Notifications
+                </CardTitle>
+                <CardDescription className="text-gray-300">
+                  Receive instant alerts when emergencies are detected
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4">
+                  <Alert className="bg-[#333] border-gray-700 text-gray-200">
+                    <Info className="h-4 w-4 text-blue-400" />
+                    <AlertTitle className="text-gray-100">How it works</AlertTitle>
+                    <AlertDescription className="text-gray-300">
+                      We continuously monitor news sources for emergency keywords. When an alert is detected, 
+                      you'll receive an instant notification even when this tab is not active.
+                    </AlertDescription>
+                  </Alert>
+                </div>
                 
-                <Tabs defaultValue={isIOS ? "ios" : "android"} className="mt-4 border-gray-700">
-                  <TabsList className="bg-[#333] border-gray-700">
-                    <TabsTrigger value="android" className="text-white data-[state=active]:bg-green-800 data-[state=active]:text-white">
-                      Android
-                    </TabsTrigger>
-                    <TabsTrigger value="ios" className="text-white data-[state=active]:bg-blue-800 data-[state=active]:text-white">
-                      iOS
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="android" className="pt-4">
-                    <ol className="list-decimal pl-5 space-y-2">
-                      <li>Open this page in Chrome</li>
-                      <li>Tap the three-dot menu in the top-right</li>
-                      <li>Select "Install app" or "Add to Home screen"</li>
-                      <li>Open the app from your home screen</li>
-                      <li>Enable notifications when prompted</li>
-                      <li>For best results, disable battery optimization for this app</li>
-                    </ol>
-                    <Button 
-                      onClick={testConnection} 
-                      variant="default" 
-                      className="mr-2 mt-4"
-                    >
-                      Test Connection
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-medium text-white">Notification Status</p>
+                      <p className="text-sm text-gray-400">
+                        {getNotificationStatusMessage()}
+                      </p>
+                    </div>
+                    <Switch 
+                      checked={subscription} 
+                      onCheckedChange={toggleSubscription}
+                      disabled={isLoading || (!supportsNotifications) || (isIOS && !isPWA)}
+                    />
+                  </div>
+                  
+                  <p className="text-sm mb-2 text-gray-300">
+                    <strong className="text-white">Notification permission:</strong> <span className="text-gray-300">{notificationPermission}</span>
+                  </p>
+                  <p className="text-sm mb-4 text-gray-300">
+                    <strong className="text-white">Latest alert:</strong> <span className="text-gray-300">{getLatestAlertTime()}</span>
+                  </p>
+                  
+                  <Button 
+                    onClick={toggleSubscription}
+                    className="w-full sm:w-auto mb-3"
+                    variant={subscription ? "outline" : "default"}
+                    disabled={isLoading || (!supportsNotifications) || (isIOS && !isPWA)}
+                  >
+                    {isLoading ? (
+                      <>Processing...</>
+                    ) : subscription ? (
+                      <><BellOff className="mr-2 h-4 w-4" /> Disable Notifications</>
+                    ) : (
+                      <><BellRing className="mr-2 h-4 w-4" /> Enable Notifications</>
+                    )}
+                  </Button>
+                  
+                  <Button
+                    onClick={testConnection}
+                    className="w-full sm:w-auto sm:ml-2"
+                    variant="outline"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Testing..." : "Test Connection"}
+                  </Button>
+                </div>
+                
+                {deviceInfo && getNotificationInstructions()}
+                
+                {deviceInfo && (
+                  <div className="mt-6 p-3 rounded bg-[#2A2A2A] text-xs text-gray-400">
+                    <p>Device: {deviceInfo.type} ({deviceInfo.os})</p>
+                    <p>Browser: {deviceInfo.browser}</p>
+                    <p>Notifications supported: {supportsNotifications ? 'Yes' : 'No'}</p>
+                    {isPWA && <p><CheckCircle className="inline h-3 w-3 text-green-500 mr-1" /> Installed as app</p>}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="alerts" className="space-y-4">
+            {/* Recent alerts table */}
+            <Card className="border-gray-800 bg-[#222]">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="text-white">Live Emergency Alerts</CardTitle>
+                    <CardDescription className="text-gray-300">
+                      Showing the most recent emergency alerts detected
+                    </CardDescription>
+                  </div>
+                  <Badge variant="outline" className="bg-[#D32F2F]/10 text-[#FF5252] border-[#D32F2F]/20">
+                    LIVE
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-4 text-gray-400">Loading alerts...</div>
+                ) : error ? (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertTitle>Error loading alerts</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                    <Button variant="outline" onClick={refreshAlerts} className="mt-2">
+                      Try Again
                     </Button>
-                  </TabsContent>
-                  <TabsContent value="ios" className="pt-4">
-                    <ol className="list-decimal pl-5 space-y-2">
-                      <li>Open this page in Safari</li>
-                      <li>Tap the Share icon <span className="inline-block px-2 py-1 bg-gray-700 rounded text-white">􀈂</span> at the bottom of the screen</li>
-                      <li>Scroll down and tap "Add to Home Screen" <span className="inline-block px-2 py-1 bg-gray-700 rounded text-white">+</span></li>
-                      <li>Tap "Add" in the top-right corner</li>
-                      <li>Open the app from your home screen</li>
-                      <li>Enable notifications when prompted</li>
-                      <li><strong>Note:</strong> iOS has limited support for web notifications</li>
-                    </ol>
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      <Button 
-                        onClick={sharePage} 
-                        variant="default" 
-                        className="mr-2"
-                      >
-                        <Share2 className="mr-1 h-4 w-4" /> Share This App
-                      </Button>
+                  </Alert>
+                ) : alerts.length === 0 ? (
+                  <div className="text-center text-gray-400 py-8">
+                    No emergency alerts detected yet.
+                  </div>
+                ) : (
+                  <div className="overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-gray-700">
+                          <TableHead className="text-gray-300">Alert</TableHead>
+                          <TableHead className="text-gray-300">Source</TableHead>
+                          <TableHead className="text-gray-300">Time</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {alerts.map((alert) => (
+                          <TableRow key={alert.id} className="border-gray-700">
+                            <TableCell className="font-medium">
+                              <a 
+                                href={alert.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline text-blue-400"
+                              >
+                                {alert.headline}
+                              </a>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={`bg-opacity-30 text-opacity-90 ${getSourceBadgeColor(alert.source)}`}>
+                                {alert.source}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-gray-400">
+                              {getTimeElapsed(alert.created_at)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+                
+                <div className="mt-4 text-right">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={refreshAlerts}
+                    className="text-gray-300 border-gray-700"
+                  >
+                    Refresh Alerts
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Detailed view of recent alerts */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold mb-4 text-white">Detailed Alerts</h2>
+              <div className="space-y-4">
+                {loading ? (
+                  <div className="text-center py-4 text-gray-400">Loading alerts...</div>
+                ) : alerts.length > 0 ? (
+                  alerts.slice(0, 5).map((alert) => (
+                    <EmergencyAlertCard key={alert.id} alert={alert} />
+                  ))
+                ) : (
+                  <div className="text-center text-gray-400 py-4">
+                    No emergency alerts to display.
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="setup" className="space-y-4">
+            <Card className="border-gray-800 bg-[#222]">
+              <CardHeader>
+                <CardTitle className="text-white">Setup Guide</CardTitle>
+                <CardDescription className="text-gray-300">
+                  Follow these steps to ensure you receive emergency alerts
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 text-gray-300">
+                <div>
+                  <h3 className="text-lg font-medium text-white flex items-center mb-2">
+                    <Monitor className="mr-2 h-5 w-5 text-blue-400" /> 
+                    Desktop Setup
+                  </h3>
+                  <ol className="list-decimal pl-5 space-y-2">
+                    <li>Click "Enable Notifications" button in the Notifications tab</li>
+                    <li>Allow notifications when your browser prompts you</li>
+                    <li>Keep this website bookmarked for easy access</li>
+                    <li>You'll receive notifications even when this tab is not active</li>
+                  </ol>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium text-white flex items-center mb-2">
+                    <Smartphone className="mr-2 h-5 w-5 text-green-400" /> 
+                    Mobile Setup
+                  </h3>
+                  <p className="mb-2">Mobile notifications work best when installed as an app:</p>
+                  
+                  <Tabs defaultValue={isIOS ? "ios" : "android"} className="mt-4 border-gray-700">
+                    <TabsList className="bg-[#333] border-gray-700">
+                      <TabsTrigger value="android" className="text-white data-[state=active]:bg-green-800 data-[state=active]:text-white">
+                        Android
+                      </TabsTrigger>
+                      <TabsTrigger value="ios" className="text-white data-[state=active]:bg-blue-800 data-[state=active]:text-white">
+                        iOS
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="android" className="pt-4">
+                      <ol className="list-decimal pl-5 space-y-2">
+                        <li>Open this page in Chrome</li>
+                        <li>Tap the three-dot menu in the top-right</li>
+                        <li>Select "Install app" or "Add to Home screen"</li>
+                        <li>Open the app from your home screen</li>
+                        <li>Enable notifications when prompted</li>
+                        <li>For best results, disable battery optimization for this app</li>
+                      </ol>
                       <Button 
                         onClick={testConnection} 
-                        variant="outline" 
-                        className="mr-2"
+                        variant="default" 
+                        className="mr-2 mt-4"
                       >
                         Test Connection
                       </Button>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium text-white flex items-center mb-2">
-                  <Info className="mr-2 h-5 w-5 text-purple-400" /> 
-                  Troubleshooting
-                </h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>If notifications aren't working, check your browser's site settings</li>
-                  <li>Make sure notifications are enabled for this website</li>
-                  <li>Try refreshing the page or reinstalling as an app</li>
-                  <li>Some mobile browsers have limited notification support</li>
-                  <li>For mobile devices, installing as an app provides the most reliable experience</li>
-                  <li>Use the "Test Connection" button to verify your system can receive alerts</li>
-                </ul>
-              </div>
-              
-              <div className="pt-4">
-                <Button onClick={testConnection} variant="default" className="mr-2" disabled={isLoading}>
-                  {isLoading ? "Testing..." : "Test Connection"}
-                </Button>
-                {isMobile && (
-                  <Button onClick={sharePage} variant="outline" className="ml-2">
-                    <Share2 className="mr-2 h-4 w-4" /> Share This App
+                    </TabsContent>
+                    <TabsContent value="ios" className="pt-4">
+                      <ol className="list-decimal pl-5 space-y-2">
+                        <li>Open this page in Safari</li>
+                        <li>Tap the Share icon <span className="inline-block px-2 py-1 bg-gray-700 rounded text-white">􀈂</span> at the bottom of the screen</li>
+                        <li>Scroll down and tap "Add to Home Screen" <span className="inline-block px-2 py-1 bg-gray-700 rounded text-white">+</span></li>
+                        <li>Tap "Add" in the top-right corner</li>
+                        <li>Open the app from your home screen</li>
+                        <li>Enable notifications when prompted</li>
+                        <li><strong>Note:</strong> iOS has limited support for web notifications</li>
+                      </ol>
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        <Button 
+                          onClick={sharePage} 
+                          variant="default" 
+                          className="mr-2"
+                        >
+                          <Share2 className="mr-1 h-4 w-4" /> Share This App
+                        </Button>
+                        <Button 
+                          onClick={testConnection} 
+                          variant="outline" 
+                          className="mr-2"
+                        >
+                          Test Connection
+                        </Button>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-medium text-white flex items-center mb-2">
+                    <Info className="mr-2 h-5 w-5 text-purple-400" /> 
+                    Troubleshooting
+                  </h3>
+                  <ul className="list-disc pl-5 space-y-2">
+                    <li>If notifications aren't working, check your browser's site settings</li>
+                    <li>Make sure notifications are enabled for this website</li>
+                    <li>Try refreshing the page or reinstalling as an app</li>
+                    <li>Some mobile browsers have limited notification support</li>
+                    <li>For mobile devices, installing as an app provides the most reliable experience</li>
+                    <li>Use the "Test Connection" button to verify your system can receive alerts</li>
+                  </ul>
+                </div>
+                
+                <div className="pt-4">
+                  <Button onClick={testConnection} variant="default" className="mr-2" disabled={isLoading}>
+                    {isLoading ? "Testing..." : "Test Connection"}
                   </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </AppLayout>
+                  {isMobile && (
+                    <Button onClick={sharePage} variant="outline" className="ml-2">
+                      <Share2 className="mr-2 h-4 w-4" /> Share This App
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </Layout>
   );
 };
 
