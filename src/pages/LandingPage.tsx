@@ -39,7 +39,7 @@ const LandingPage = () => {
               transition={{ duration: 0.8 }}
               className="text-center"
             >
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-dark-text-primary mb-6">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6">
                 Stay Alert, Stay Prepared
                 <span className="block text-dark-accent">Emergency News Monitoring</span>
               </h1>
@@ -62,7 +62,7 @@ const LandingPage = () => {
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-dark-surface">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-dark-text-primary mb-4">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
                 Why Choose Our Platform?
               </h2>
               <p className="text-xl text-dark-text-secondary">
@@ -79,7 +79,7 @@ const LandingPage = () => {
                   className="p-6 bg-dark-surface-light rounded-lg shadow-lg border border-dark-border hover:shadow-xl transition-all duration-300 hover:border-dark-accent/30"
                 >
                   <div className="text-dark-accent mb-4">{feature.icon}</div>
-                  <h3 className="text-xl font-semibold text-dark-text-primary mb-2">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
                     {feature.title}
                   </h3>
                   <p className="text-dark-text-secondary">{feature.description}</p>

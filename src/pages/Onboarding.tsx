@@ -112,7 +112,7 @@ export default function Onboarding() {
         return (
           <Card className="border-dark-border bg-dark-surface">
             <CardHeader>
-              <CardTitle className="text-dark-text-primary">Phone Number</CardTitle>
+              <CardTitle className="text-gray-900">Phone Number</CardTitle>
               <CardDescription className="text-dark-text-secondary">
                 We'll use this to send you emergency alerts
               </CardDescription>
@@ -125,13 +125,13 @@ export default function Onboarding() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-dark-text-primary">Phone Number</FormLabel>
+                        <FormLabel className="text-gray-900">Phone Number</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             type="tel"
                             placeholder="Enter your phone number"
-                            className="bg-dark-surface-light border-dark-border text-dark-text-primary placeholder-dark-text-muted focus:border-dark-accent"
+                            className="bg-dark-surface-light border-dark-border text-gray-900 placeholder-dark-text-muted focus:border-dark-accent"
                           />
                         </FormControl>
                         <FormMessage />
@@ -151,7 +151,7 @@ export default function Onboarding() {
         return (
           <Card className="border-dark-border bg-dark-surface">
             <CardHeader>
-              <CardTitle className="text-dark-text-primary">Location Setup</CardTitle>
+              <CardTitle className="text-gray-900">Location Setup</CardTitle>
               <CardDescription className="text-dark-text-secondary">
                 Set your location to receive relevant emergency alerts
               </CardDescription>
@@ -182,7 +182,7 @@ export default function Onboarding() {
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-dark-text-primary mb-2">Welcome to Satark</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Satark</h1>
             <p className="text-dark-text-secondary">Let's set up your location to receive relevant alerts</p>
           </div>
           

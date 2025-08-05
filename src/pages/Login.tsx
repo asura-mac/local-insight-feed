@@ -8,7 +8,7 @@ export default function Login() {
         <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
           <div className="w-full max-w-md">
             <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold text-dark-text-primary mb-2">Welcome Back</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
               <p className="text-dark-text-secondary">Sign in to your Satark account</p>
             </div>
             <LoginForm />

@@ -1,48 +1,18 @@
-
-export const EMERGENCY_KEYWORDS = [
-  // Natural disasters
-  "earthquake",
-  "tsunami",
-  "flood",
-  "flooding",
-  "landslide",
-  "mudslide",
-  "hurricane",
-  "cyclone",
-  "tornado",
-  "wildfire",
-  "forest fire",
-  "drought",
-  "avalanche",
-  
-  // Weather emergencies
-  "severe weather",
-  "storm warning",
-  "blizzard",
-  "heavy rainfall",
-  "heatwave",
-  "extreme heat",
-  "frost",
-  "heavy snow",
-  
-  // Security incidents
+// NATIONAL ALERTS - India-wide emergencies and incidents
+export const NATIONAL_EMERGENCY_KEYWORDS = [
+  // National Security
   "terrorist",
   "terrorism",
-  "explosion",
-  "shooting",
-  "hostage",
-  "hijack",
-  "bomb",
-  "bombing",
-  "attack",
-  "riot",
-  "violent protest",
-  "unrest",
-  "gunman",
-  "armed conflict",
-  "insurgent",
-  "militant",
-  "ammunition",
+  "national security",
+  "central government",
+  "prime minister",
+  "home minister",
+  "parliament attack",
+  "constitutional crisis",
+  "national emergency",
+  "emergency declared",
+  "article 356",
+  "president's rule",
   
   // Military/Border conflicts
   "india-pakistan",
@@ -57,27 +27,127 @@ export const EMERGENCY_KEYWORDS = [
   "surgical strike",
   "military operation",
   "troop movement",
+  "china border",
+  "lac",
+  "actual line of control",
+  "galwan",
+  "doklam",
   
-  // Accidents
-  "plane crash",
+  // Major Infrastructure
+  "railway accident",
   "train derail",
   "train accident",
-  "major accident",
+  "air crash",
+  "plane crash",
+  "airport shutdown",
+  "national highway",
+  "major bridge collapse",
+  "dam failure",
+  "power grid failure",
+  "internet blackout",
+  "communications blackout",
+  
+  // Public Health - National Scale
+  "pandemic",
+  "national outbreak",
+  "health emergency",
+  "lockdown",
+  "nationwide quarantine",
+  "vaccine shortage",
+  "medical emergency",
+  
+  // Economic Emergencies
+  "economic crisis",
+  "currency crash",
+  "bank failure",
+  "financial emergency",
+  "fuel crisis",
+  "nationwide strike",
+  
+  // Large Scale Violence
+  "communal violence",
+  "caste violence",
+  "mob lynching",
+  "riot",
+  "violent protest",
+  "unrest",
+  "bandh",
+  "hartaal"
+];
+
+// REGIONAL ALERTS - State-wise emergencies and incidents
+export const REGIONAL_EMERGENCY_KEYWORDS = [
+  // Natural disasters
+  "earthquake",
+  "tsunami",
+  "flood",
+  "flooding",
+  "landslide",
+  "mudslide",
+  "hurricane",
+  "cyclone",
+  "tornado",
+  "wildfire",
+  "forest fire",
+  "drought",
+  "avalanche",
+  "cloudburst",
+  "flash flood",
+  
+  // Weather emergencies
+  "severe weather",
+  "storm warning",
+  "blizzard",
+  "heavy rainfall",
+  "heatwave",
+  "extreme heat",
+  "cold wave",
+  "frost",
+  "heavy snow",
+  "monsoon",
+  "pre-monsoon",
+  "thunderstorm",
+  
+  // Regional Security
+  "explosion",
+  "shooting",
+  "hostage",
+  "hijack",
+  "bomb",
+  "bombing",
+  "attack",
+  "gunman",
+  "armed conflict",
+  "insurgent",
+  "militant",
+  "ammunition",
+  "encounter",
+  "police firing",
+  
+  // State-specific emergencies
+  "chief minister",
+  "state government",
+  "assembly",
+  "governor",
+  "state emergency",
+  "district collector",
+  "police commissioner",
+  
+  // Regional Infrastructure
   "building collapse",
   "bridge collapse",
-  "dam failure",
   "boat capsize",
   "fire breaks out",
   "massive fire",
-  "explosion",
   "blast",
   "gas leak",
   "chemical spill",
   "industrial accident",
+  "mine accident",
+  "factory fire",
   
-  // Public health
+  // Regional Health
   "epidemic",
-  "pandemic",
   "outbreak",
   "virus",
   "infection",
@@ -86,19 +156,147 @@ export const EMERGENCY_KEYWORDS = [
   "evacuation",
   "emergency",
   "public health crisis",
+  "food poisoning",
+  "water contamination",
   
-  // Civil infrastructure
+  // Regional Civil issues
   "power outage",
   "water shortage",
-  "water contamination",
   "fuel shortage",
-  "communications blackout",
   "infrastructure failure",
   "dam breach",
-  "state of emergency",
-  "emergency declared"
+  "bandh",
+  "strike",
+  
+  // State-wise keywords
+  "andhra pradesh earthquake", "andhra pradesh flood", "andhra pradesh cyclone", "andhra pradesh blast",
+  "arunachal pradesh earthquake", "arunachal pradesh landslide", "arunachal pradesh border", "arunachal pradesh flood",
+  "assam earthquake", "assam flood", "assam landslide", "assam blast", "assam encounter", "assam violence",
+  "bihar flood", "bihar earthquake", "bihar blast", "bihar accident", "bihar drought", "bihar naxal",
+  "chhattisgarh naxal", "chhattisgarh blast", "chhattisgarh encounter", "chhattisgarh flood", "chhattisgarh mine",
+  "goa blast", "goa accident", "goa cyclone", "goa flood", "goa fire",
+  "gujarat earthquake", "gujarat blast", "gujarat cyclone", "gujarat flood", "gujarat accident", "gujarat riot",
+  "haryana blast", "haryana accident", "haryana flood", "haryana fire", "haryana violence", "haryana farmer",
+  "himachal pradesh landslide", "himachal pradesh avalanche", "himachal pradesh flood", "himachal pradesh accident",
+  "jharkhand naxal", "jharkhand blast", "jharkhand mine", "jharkhand encounter", "jharkhand flood", "jharkhand accident",
+  "karnataka flood", "karnataka landslide", "karnataka blast", "karnataka accident", "karnataka drought", "karnataka fire",
+  "kerala flood", "kerala landslide", "kerala accident", "kerala blast", "kerala fire", "kerala cyclone",
+  "madhya pradesh flood", "madhya pradesh blast", "madhya pradesh naxal", "madhya pradesh accident", "madhya pradesh drought",
+  "maharashtra flood", "maharashtra landslide", "maharashtra blast", "maharashtra accident", "maharashtra drought", "maharashtra naxal",
+  "manipur violence", "manipur blast", "manipur encounter", "manipur earthquake", "manipur flood", "manipur unrest",
+  "meghalaya landslide", "meghalaya flood", "meghalaya earthquake", "meghalaya blast", "meghalaya accident",
+  "mizoram earthquake", "mizoram landslide", "mizoram flood", "mizoram blast", "mizoram violence",
+  "nagaland earthquake", "nagaland landslide", "nagaland flood", "nagaland blast", "nagaland violence",
+  "odisha cyclone", "odisha flood", "odisha earthquake", "odisha blast", "odisha accident", "odisha mine",
+  "punjab blast", "punjab accident", "punjab flood", "punjab fire", "punjab farmer", "punjab violence",
+  "rajasthan drought", "rajasthan flood", "rajasthan blast", "rajasthan accident", "rajasthan fire", "rajasthan violence",
+  "sikkim earthquake", "sikkim landslide", "sikkim flood", "sikkim avalanche", "sikkim accident",
+  "tamil nadu cyclone", "tamil nadu flood", "tamil nadu blast", "tamil nadu accident", "tamil nadu drought", "tamil nadu fire",
+  "telangana flood", "telangana blast", "telangana accident", "telangana drought", "telangana fire", "telangana encounter",
+  "tripura flood", "tripura landslide", "tripura earthquake", "tripura blast", "tripura violence",
+  "uttar pradesh flood", "uttar pradesh blast", "uttar pradesh accident", "uttar pradesh violence", "uttar pradesh encounter",
+  "uttarakhand landslide", "uttarakhand flood", "uttarakhand avalanche", "uttarakhand accident", "uttarakhand glacier",
+  "west bengal cyclone", "west bengal flood", "west bengal blast", "west bengal accident", "west bengal violence",
+  
+  // Union Territories
+  "delhi blast", "delhi accident", "delhi fire", "delhi flood", "delhi violence", "delhi pollution",
+  "jammu and kashmir encounter", "jammu and kashmir blast", "jammu and kashmir earthquake", "jammu and kashmir avalanche",
+  "ladakh earthquake", "ladakh avalanche", "ladakh border", "ladakh accident", "ladakh landslide",
+  "chandigarh blast", "chandigarh accident", "chandigarh fire", "chandigarh flood",
+  "puducherry cyclone", "puducherry flood", "puducherry blast", "puducherry accident",
+  "andaman and nicobar tsunami", "andaman and nicobar cyclone", "andaman and nicobar earthquake", "andaman and nicobar flood",
+  "lakshadweep cyclone", "lakshadweep flood", "lakshadweep accident",
+  "dadra and nagar haveli flood", "dadra and nagar haveli blast", "dadra and nagar haveli accident",
+  "daman and diu cyclone", "daman and diu flood", "daman and diu blast", "daman and diu accident"
 ];
 
+// INTERNATIONAL ALERTS - Global emergencies affecting India or major world events
+export const INTERNATIONAL_EMERGENCY_KEYWORDS = [
+  // Global Natural Disasters
+  "global earthquake",
+  "international tsunami",
+  "climate emergency",
+  "global warming crisis",
+  "international disaster",
+  
+  // International Conflicts
+  "world war",
+  "international conflict",
+  "nuclear threat",
+  "missile attack",
+  "international terrorism",
+  "cyber warfare",
+  "sanctions",
+  "trade war",
+  
+  // Global Health
+  "global pandemic",
+  "who emergency",
+  "international outbreak",
+  "global health crisis",
+  "vaccine diplomacy",
+  
+  // Economic - International
+  "global recession",
+  "international market crash",
+  "oil crisis",
+  "global supply chain",
+  "international banking crisis",
+  
+  // Neighboring Countries (affecting India)
+  "pakistan",
+  "china",
+  "bangladesh",
+  "sri lanka",
+  "nepal",
+  "bhutan",
+  "myanmar",
+  "afghanistan",
+  "maldives",
+  
+  // International Organizations
+  "united nations",
+  "un security council",
+  "international court",
+  "world bank",
+  "imf",
+  "g20",
+  "g7",
+  "nato",
+  
+  // Global Leaders and Politics
+  "international summit",
+  "diplomatic crisis",
+  "embassy attack",
+  "consulate",
+  "international sanctions",
+  "refugee crisis",
+  "international aid",
+  
+  // Global Infrastructure
+  "international flight",
+  "global internet outage",
+  "submarine cable",
+  "international shipping",
+  "suez canal",
+  "strait of hormuz",
+  
+  // Space and Technology
+  "satellite failure",
+  "space debris",
+  "international space station",
+  "cyber attack",
+  "global hacking",
+  
+  // Major International Incidents
+  "plane hijack",
+  "ship hijack",
+  "international hostage",
+  "embassy siege",
+  "international arrest warrant"
+];
+
+// EXCLUSION KEYWORDS - Same as original
 export const EXCLUSION_KEYWORDS = [
   "movie",
   "film",

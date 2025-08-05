@@ -304,7 +304,7 @@ export default function Profile() {
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-3xl mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-dark-text-primary">Profile Settings</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
           </div>
 
           {message && (
@@ -322,7 +322,7 @@ export default function Profile() {
 
           <Card className="border-dark-border bg-dark-surface">
             <CardHeader>
-              <CardTitle className="text-dark-text-primary">Personal Information</CardTitle>
+              <CardTitle className="text-gray-900">Personal Information</CardTitle>
               <CardDescription className="text-dark-text-secondary">
                 Update your profile information and location preferences
               </CardDescription>
@@ -331,19 +331,19 @@ export default function Profile() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="full_name" className="text-dark-text-primary">Full Name</Label>
+                    <Label htmlFor="full_name" className="text-gray-900">Full Name</Label>
                     <Input
                       id="full_name"
                       type="text"
                       value={userData?.full_name || ''}
                       onChange={(e) => setUserData(prev => prev ? { ...prev, full_name: e.target.value } : null)}
-                      className="bg-dark-surface-light border-dark-border text-dark-text-primary placeholder-dark-text-muted focus:border-dark-accent"
+                      className="bg-dark-surface-light border-dark-border text-gray-900 placeholder-dark-text-muted focus:border-dark-accent"
                       placeholder="Enter your full name"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-dark-text-primary">Phone Number</Label>
+                    <Label htmlFor="phone" className="text-gray-900">Phone Number</Label>
                     <Input
                       id="phone"
                       type="tel"
@@ -352,7 +352,7 @@ export default function Profile() {
                         setPhoneNumber(e.target.value);
                         setPhoneError(null);
                       }}
-                      className="bg-dark-surface-light border-dark-border text-dark-text-primary placeholder-dark-text-muted focus:border-dark-accent"
+                      className="bg-dark-surface-light border-dark-border text-gray-900 placeholder-dark-text-muted focus:border-dark-accent"
                       placeholder="Enter your phone number"
                     />
                     {phoneError && (
@@ -364,37 +364,37 @@ export default function Profile() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="country" className="text-dark-text-primary">Country</Label>
+                    <Label htmlFor="country" className="text-gray-900">Country</Label>
                     <Input
                       id="country"
                       type="text"
                       value={userData?.country || ''}
                       onChange={(e) => setUserData(prev => prev ? { ...prev, country: e.target.value } : null)}
-                      className="bg-dark-surface-light border-dark-border text-dark-text-primary placeholder-dark-text-muted focus:border-dark-accent"
+                      className="bg-dark-surface-light border-dark-border text-gray-900 placeholder-dark-text-muted focus:border-dark-accent"
                       placeholder="Enter your country"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="state" className="text-dark-text-primary">State/Province</Label>
+                    <Label htmlFor="state" className="text-gray-900">State/Province</Label>
                     <Input
                       id="state"
                       type="text"
                       value={userData?.state || ''}
                       onChange={(e) => setUserData(prev => prev ? { ...prev, state: e.target.value } : null)}
-                      className="bg-dark-surface-light border-dark-border text-dark-text-primary placeholder-dark-text-muted focus:border-dark-accent"
+                      className="bg-dark-surface-light border-dark-border text-gray-900 placeholder-dark-text-muted focus:border-dark-accent"
                       placeholder="Enter your state or province"
                     />
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="district" className="text-dark-text-primary">District/City</Label>
+                    <Label htmlFor="district" className="text-gray-900">District/City</Label>
                     <Input
                       id="district"
                       type="text"
                       value={userData?.district || ''}
                       onChange={(e) => setUserData(prev => prev ? { ...prev, district: e.target.value } : null)}
-                      className="bg-dark-surface-light border-dark-border text-dark-text-primary placeholder-dark-text-muted focus:border-dark-accent"
+                      className="bg-dark-surface-light border-dark-border text-gray-900 placeholder-dark-text-muted focus:border-dark-accent"
                       placeholder="Enter your district or city"
                     />
                   </div>
@@ -415,7 +415,7 @@ export default function Profile() {
 
           <Card className="border-dark-border bg-dark-surface mt-6">
             <CardHeader>
-              <CardTitle className="text-dark-text-primary">Location</CardTitle>
+              <CardTitle className="text-gray-900">Location</CardTitle>
               <CardDescription className="text-dark-text-secondary">
                 Your current location for alerts
               </CardDescription>
@@ -430,7 +430,7 @@ export default function Profile() {
                 />
               ) : (
                 <div className="space-y-4">
-                  <p className="text-dark-text-primary">
+                  <p className="text-gray-900">
                     <strong>Current Location:</strong> {userData?.location || "No location set"}
                   </p>
                   <div className="flex flex-wrap gap-3">
@@ -444,7 +444,7 @@ export default function Profile() {
                       onClick={detectLocation}
                       variant="outline"
                       disabled={detectingLocation}
-                      className="border-dark-border text-dark-text-primary hover:bg-dark-accent hover:text-white flex items-center"
+                      className="border-dark-border text-gray-900 hover:bg-dark-accent hover:text-white flex items-center"
                     >
                       {detectingLocation ? (
                         <>
